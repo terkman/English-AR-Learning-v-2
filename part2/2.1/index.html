@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>2.1 ฟังเสียงซ้ำได้ + คำถาม</title>
+  <link rel="stylesheet" href="../../style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+</head>
+<body class="ar-page">
+  <div class="ar-topbar">
+    <a class="ar-back-btn" href="../index.html">← Back</a>
+    <span class="ar-status">READY</span>
+    <button class="ar-mini-btn" data-speak="What does this message ask people to do?">🔊</button>
+  </div>
+  <main class="ar-shell">
+    <section class="ar-card">
+      <div class="ar-hero">
+        <h1 class="ar-title">🔊 2.1 ฟังเสียงซ้ำได้ + คำถาม</h1>
+        <p class="ar-desc">สแกนป้ายหรือฉาก แล้วแสดงคำถามปลายเปิดพร้อมปุ่มฟังซ้ำ หน้านี้แทนหน้า Part 2 เดิม</p>
+      </div>
+      <div class="camera-box">
+        <div class="scan-line"></div>
+        <div class="camera-icon">📷</div>
+        <div class="camera-title">Camera / Image Tracking Area</div>
+        <p class="camera-desc">This page keeps the correct sub-page URL and file paths. Connect your MindAR target file and JSON data here when ready.</p>
+      </div>
+      <div class="ar-actions">
+        <button class="btn btn-yellow" data-demo-output="#demo-output">Preview AR Output</button>
+        <button class="btn btn-ghost" data-speak="What does this message ask people to do?">Speak</button>
+      </div>
+      <div id="demo-output" class="demo-output visually-hidden">
+        <div class="demo-label">OPEN QUESTION</div>
+        <div class="demo-text">What does this message ask people to do?</div>
+      </div>
+    </section>
+  </main>
+  <script src="../../script.js"></script>
+</body>
+</html>
