@@ -9,18 +9,16 @@
 
   <title>1.1 Scan Image to Text</title>
 
-  <!-- A-Frame + MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <!-- 3D extruded text -->
   <script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
 
   <style>
     :root {
       --bg: #020617;
       --line: rgba(255,255,255,.16);
-      --cyan: #38bdf8;
+      --part1: #38bdf8;
+      --part1-dark: #0f172a;
       --yellow: #facc15;
     }
 
@@ -29,8 +27,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       width: 100%;
       height: 100%;
@@ -164,7 +161,7 @@
     .start button {
       border: 0;
       border-radius: 18px;
-      background: var(--cyan);
+      background: var(--part1);
       color: #00111f;
       font-size: 17px;
       font-weight: 950;
@@ -247,6 +244,9 @@
     const errorEl = document.getElementById('error');
     const statusEl = document.getElementById('status');
 
+    const PART1_COLOR = '#38bdf8';
+    const PART1_SHADOW = '#082f49';
+
     let vocabData = [];
     let dataReady = false;
     let targetsBuilt = false;
@@ -291,11 +291,11 @@
     function getTextSize(lines) {
       const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
 
-      if (lines.length >= 6 || longest >= 26) return 0.043;
-      if (lines.length >= 5 || longest >= 22) return 0.050;
-      if (lines.length >= 4 || longest >= 18) return 0.058;
-      if (lines.length >= 3 || longest >= 14) return 0.070;
-      return 0.085;
+      if (lines.length >= 6 || longest >= 26) return 0.034;
+      if (lines.length >= 5 || longest >= 22) return 0.040;
+      if (lines.length >= 4 || longest >= 18) return 0.046;
+      if (lines.length >= 3 || longest >= 14) return 0.054;
+      return 0.065;
     }
 
     function createTextGeometry(value, position, size, isShadow = false) {
@@ -307,35 +307,34 @@
       text.setAttribute('text-geometry', {
         value: cleanText(value),
         font: '#fontBold',
-        align: 'center',
         size: size,
         height: 0.018,
         curveSegments: 5,
         bevelEnabled: true,
-        bevelSize: 0.0028,
-        bevelThickness: 0.0028
+        bevelSize: 0.0025,
+        bevelThickness: 0.0025
       });
 
       if (isShadow) {
         text.setAttribute('material', {
           shader: 'standard',
-          color: '#020617',
-          emissive: '#020617',
-          emissiveIntensity: 0.15,
-          opacity: 0.92,
+          color: PART1_SHADOW,
+          emissive: PART1_SHADOW,
+          emissiveIntensity: 0.18,
+          opacity: 0.95,
           transparent: true,
           metalness: 0,
-          roughness: 0.65,
+          roughness: 0.7,
           side: 'double'
         });
       } else {
         text.setAttribute('material', {
           shader: 'standard',
-          color: '#ffffff',
-          emissive: '#ffffff',
+          color: PART1_COLOR,
+          emissive: PART1_COLOR,
           emissiveIntensity: 0.55,
           metalness: 0.02,
-          roughness: 0.28,
+          roughness: 0.25,
           side: 'double'
         });
       }
@@ -353,7 +352,8 @@
       const gap = size * 1.55;
       const startY = ((lines.length - 1) * gap) / 2;
 
-      group.setAttribute('position', '0 0.02 0.08');
+      // วางไว้ตรงกลาง target
+      group.setAttribute('position', '0 0 0.06');
       group.setAttribute('rotation', '0 0 0');
 
       lines.forEach((line, index) => {
@@ -361,7 +361,7 @@
 
         const shadow = createTextGeometry(
           line,
-          `0.010 ${y - 0.010} -0.010`,
+          `0.008 ${y - 0.008} -0.010`,
           size,
           true
         );
