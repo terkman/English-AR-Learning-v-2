@@ -291,11 +291,11 @@
     function getTextSize(lines) {
       const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
 
-      if (lines.length >= 6 || longest >= 26) return 0.034;
-      if (lines.length >= 5 || longest >= 22) return 0.040;
-      if (lines.length >= 4 || longest >= 18) return 0.046;
-      if (lines.length >= 3 || longest >= 14) return 0.054;
-      return 0.065;
+      if (lines.length >= 6 || longest >= 26) return 0.045;
+      if (lines.length >= 5 || longest >= 22) return 0.052;
+      if (lines.length >= 4 || longest >= 18) return 0.060;
+      if (lines.length >= 3 || longest >= 14) return 0.072;
+      return 0.088;
     }
 
     function createTextGeometry(value, position, size, isShadow = false) {
