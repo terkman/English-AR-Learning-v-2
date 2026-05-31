@@ -14,10 +14,10 @@
       --line: rgba(255,255,255,.16);
       --part1: #38bdf8;
       --part1-dark: #082f49;
-      --yellow: #facc15;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
     html, body {
       margin: 0;
       width: 100%;
@@ -48,7 +48,12 @@
       background: #000 !important;
     }
 
-    .a-enter-vr, .a-enter-ar, .mindar-ui-overlay, .mindar-ui-scanning, .mindar-ui-loading, .mindar-ui-error {
+    .a-enter-vr,
+    .a-enter-ar,
+    .mindar-ui-overlay,
+    .mindar-ui-scanning,
+    .mindar-ui-loading,
+    .mindar-ui-error {
       display: none !important;
     }
 
@@ -66,6 +71,7 @@
       background: linear-gradient(180deg, rgba(2,6,23,.55), rgba(2,6,23,0));
       pointer-events: none;
     }
+
     .topbar > * { pointer-events: auto; }
 
     .back {
@@ -97,6 +103,7 @@
       background: rgba(56,189,248,.92);
       box-shadow: 0 8px 30px rgba(14,165,233,.22);
     }
+
     .status.found {
       background: rgba(250,204,21,.96);
       box-shadow: 0 8px 30px rgba(250,204,21,.22);
@@ -113,6 +120,7 @@
       background: radial-gradient(circle at top, #0e7490 0%, #082f49 38%, #020617 72%);
       text-align: center;
     }
+
     .start-card {
       width: min(520px, 100%);
       border: 1px solid rgba(255,255,255,.18);
@@ -122,12 +130,14 @@
       box-shadow: 0 24px 90px rgba(0,0,0,.5);
       backdrop-filter: blur(16px);
     }
+
     .start h1 {
       margin: 0 0 8px;
       font-size: clamp(26px, 8vw, 38px);
       line-height: 1.08;
       font-weight: 950;
     }
+
     .start p {
       margin: 8px auto 16px;
       max-width: 420px;
@@ -135,6 +145,7 @@
       color: #dbeafe;
       font-size: 15px;
     }
+
     .start button {
       border: 0;
       border-radius: 18px;
@@ -145,13 +156,16 @@
       padding: 14px 22px;
       box-shadow: 0 12px 30px rgba(56,189,248,.28);
     }
+
     .start button:disabled { opacity: .55; }
+
     .hint {
       font-size: 13px;
       color: #bae6fd;
       margin-top: 12px;
       line-height: 1.45;
     }
+
     .error {
       display: none;
       margin-top: 12px;
@@ -165,6 +179,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Part 1</a>
@@ -188,10 +203,12 @@
     renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded>
+    embedded
+  >
     <a-assets timeout="15000">
       <a-asset-item id="fontBold" src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"></a-asset-item>
     </a-assets>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
     <a-entity light="type: ambient; intensity: 1.35"></a-entity>
     <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
@@ -208,8 +225,11 @@
     const statusEl = document.getElementById('status');
 
     const PART1_COLOR = '#38bdf8';
-    const PART1_STROKE = '#00131d';
     const PART1_SHADOW = '#082f49';
+
+    // ปรับระยะห่างระหว่างตัวอักษรตรงนี้
+    // 0.000 = ชิดแบบเดิม, 0.004 = ห่างเล็กน้อย, 0.008 = ห่างชัด, 0.012 = ห่างมาก
+    const LETTER_GAP = 0.006;
 
     let vocabData = [];
     let dataReady = false;
@@ -231,14 +251,21 @@
     }
 
     function getTerms(item) {
-      if (Array.isArray(item.terms) && item.terms.length > 0) return item.terms.map(cleanText).filter(Boolean);
-      if (item.displayText) return String(item.displayText).split(',').map(cleanText).filter(Boolean);
+      if (Array.isArray(item.terms) && item.terms.length > 0) {
+        return item.terms.map(cleanText).filter(Boolean);
+      }
+
+      if (item.displayText) {
+        return String(item.displayText).split(',').map(cleanText).filter(Boolean);
+      }
+
       if (item.word) return [cleanText(item.word)];
       return [];
     }
 
     function getTextSize(lines) {
       const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
+
       if (lines.length >= 6 || longest >= 26) return 0.034;
       if (lines.length >= 5 || longest >= 22) return 0.040;
       if (lines.length >= 4 || longest >= 18) return 0.046;
@@ -246,9 +273,19 @@
       return 0.065;
     }
 
+    function getCharWidth(char, size) {
+      if (char === ' ') return size * 0.48;
+      if ('ilI.,:;!|'.includes(char)) return size * 0.34;
+      if ('mwMW'.includes(char)) return size * 0.92;
+      if ('fjrt()[]'.includes(char)) return size * 0.48;
+      if ('ABCDEFGHKNOPQRSTUVWXYZ'.includes(char)) return size * 0.72;
+      return size * 0.62;
+    }
+
     function centerTextMesh(entity) {
       const applyCenter = () => {
         let didCenter = false;
+
         entity.object3D.traverse((child) => {
           if (!child.isMesh || !child.geometry) return;
           if (child.geometry.userData && child.geometry.userData.centeredX) return;
@@ -260,10 +297,13 @@
           const centerX = (box.min.x + box.max.x) / 2;
           child.geometry.translate(-centerX, 0, 0);
           child.geometry.computeBoundingBox();
+
           child.geometry.userData = child.geometry.userData || {};
           child.geometry.userData.centeredX = true;
+
           didCenter = true;
         });
+
         return didCenter;
       };
 
@@ -285,45 +325,30 @@
       setTimeout(() => tryCenter(), 1200);
     }
 
-    function createTextGeometry(value, position, size, role = 'front') {
+    function createCharGeometry(char, position, size, isShadow = false) {
       const text = document.createElement('a-entity');
       text.setAttribute('position', position);
       text.setAttribute('rotation', '0 0 0');
 
-      const effectiveSize = role === 'stroke' ? size * 1.08 : size;
-      const effectiveHeight = role === 'stroke' ? 0.022 : 0.018;
-      const effectiveBevelSize = role === 'stroke' ? 0.0034 : 0.0025;
-      const effectiveBevelThickness = role === 'stroke' ? 0.0034 : 0.0025;
-
       text.setAttribute('text-geometry', {
-        value: cleanText(value),
+        value: char,
         font: '#fontBold',
         align: 'center',
-        size: effectiveSize,
-        height: effectiveHeight,
+        size: size,
+        height: 0.018,
         curveSegments: 5,
         bevelEnabled: true,
-        bevelSize: effectiveBevelSize,
-        bevelThickness: effectiveBevelThickness
+        bevelSize: 0.0025,
+        bevelThickness: 0.0025
       });
 
-      if (role === 'stroke') {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART1_STROKE,
-          emissive: PART1_STROKE,
-          emissiveIntensity: 0.04,
-          metalness: 0,
-          roughness: 0.78,
-          side: 'double'
-        });
-      } else if (role === 'shadow') {
+      if (isShadow) {
         text.setAttribute('material', {
           shader: 'standard',
           color: PART1_SHADOW,
           emissive: PART1_SHADOW,
           emissiveIntensity: 0.18,
-          opacity: 0.96,
+          opacity: 0.95,
           transparent: true,
           metalness: 0,
           roughness: 0.7,
@@ -345,6 +370,47 @@
       return text;
     }
 
+    function buildLetterSpacedLine(line, y, size) {
+      const lineGroup = document.createElement('a-entity');
+      const chars = Array.from(cleanText(line));
+      const widths = chars.map((char) => getCharWidth(char, size));
+
+      const totalWidth =
+        widths.reduce((sum, width) => sum + width, 0) +
+        Math.max(0, chars.length - 1) * LETTER_GAP;
+
+      let cursorX = -totalWidth / 2;
+
+      chars.forEach((char, index) => {
+        const width = widths[index];
+
+        if (char !== ' ') {
+          const x = cursorX + width / 2;
+
+          const shadow = createCharGeometry(
+            char,
+            `${(x + 0.008).toFixed(4)} ${(y - 0.008).toFixed(4)} -0.010`,
+            size,
+            true
+          );
+
+          const front = createCharGeometry(
+            char,
+            `${x.toFixed(4)} ${y.toFixed(4)} 0`,
+            size,
+            false
+          );
+
+          lineGroup.appendChild(shadow);
+          lineGroup.appendChild(front);
+        }
+
+        cursorX += width + LETTER_GAP;
+      });
+
+      return lineGroup;
+    }
+
     function buildTextGroup(item) {
       const group = document.createElement('a-entity');
       const lines = getTerms(item);
@@ -357,31 +423,9 @@
       group.setAttribute('position', '0 0 0.06');
       group.setAttribute('rotation', '0 0 0');
 
-      const strokeOffsets = [
-        [-0.018,  0.000, -0.002], [ 0.018,  0.000, -0.002],
-        [ 0.000,  0.018, -0.002], [ 0.000, -0.018, -0.002],
-        [-0.013, -0.013, -0.002], [ 0.013, -0.013, -0.002],
-        [-0.013,  0.013, -0.002], [ 0.013,  0.013, -0.002]
-      ];
-
       lines.forEach((line, index) => {
         const y = startY - (index * gap);
-
-        const shadow = createTextGeometry(line, `0.012 ${y - 0.012} -0.016`, size, 'shadow');
-        group.appendChild(shadow);
-
-        strokeOffsets.forEach(([ox, oy, oz]) => {
-          const stroke = createTextGeometry(
-            line,
-            `${ox.toFixed(3)} ${(y + oy).toFixed(3)} ${oz.toFixed(3)}`,
-            size,
-            'stroke'
-          );
-          group.appendChild(stroke);
-        });
-
-        const front = createTextGeometry(line, `0 ${y} 0.004`, size, 'front');
-        group.appendChild(front);
+        group.appendChild(buildLetterSpacedLine(line, y, size));
       });
 
       return group;
@@ -389,9 +433,11 @@
 
     function buildTargets() {
       if (targetsBuilt) return;
+
       vocabData.forEach((item) => {
         const target = document.createElement('a-entity');
         target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
+
         const textGroup = buildTextGroup(item);
         target.appendChild(textGroup);
 
@@ -408,14 +454,19 @@
 
         scene.appendChild(target);
       });
+
       targetsBuilt = true;
     }
 
     async function loadData() {
       const response = await fetch(DATA_URL, { cache: 'no-store' });
       if (!response.ok) throw new Error('Cannot load part1-1.json');
+
       vocabData = await response.json();
-      if (!Array.isArray(vocabData) || vocabData.length === 0) throw new Error('part1-1.json has no data');
+      if (!Array.isArray(vocabData) || vocabData.length === 0) {
+        throw new Error('part1-1.json has no data');
+      }
+
       buildTargets();
       dataReady = true;
     }
@@ -437,12 +488,17 @@
         startBtn.disabled = true;
         errorEl.style.display = 'none';
         setStatus('Starting');
+
         await checkMindFile();
         await waitForSceneLoaded();
+
         if (!dataReady) await loadData();
+
         const mindarSystem = scene.systems['mindar-image-system'];
         if (!mindarSystem) throw new Error('MindAR system is not ready');
+
         await mindarSystem.start();
+
         startScreen.style.display = 'none';
         setStatus('Scanning');
       } catch (error) {
@@ -454,11 +510,14 @@
     }
 
     scene.addEventListener('arReady', () => console.log('[1.1] AR ready'));
+
     scene.addEventListener('arError', () => {
       setStatus('Camera Error');
       showError('Camera access failed. Please allow camera permission and reload this page.');
     });
+
     startBtn.addEventListener('click', startAR);
+
     loadData().catch((error) => {
       console.error(error);
       setStatus('Data Error');
