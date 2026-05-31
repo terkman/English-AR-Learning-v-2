@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>1.1 สแกนภาพขึ้นข้อความ</title>
 
-  <!-- ใช้โครงแบบเดียวกับ Part 1 ต้นแบบ: A-Frame + MindAR + Text Geometry -->
+  <!-- โครง MindAR + 3D Text แบบ Part 1 ของ AR v1 -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
@@ -13,16 +13,21 @@
   <style>
     :root{
       --bg:#020617;
-      --panel:rgba(2,6,23,.82);
       --line:rgba(255,255,255,.16);
       --cyan:#38bdf8;
       --yellow:#facc15;
-      --white:#ffffff;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:var(--bg);
+      color:#fff;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
 
-    /* สำคัญ: บังคับ layer กล้อง / scene / canvas ให้เต็มจอ ไม่ให้เกิดพื้นที่ดำบังกล้อง */
     a-scene,
     a-scene canvas{
       position:fixed!important;
@@ -41,60 +46,101 @@
       z-index:0!important;
       background:#000!important;
     }
-    .a-enter-vr,.a-enter-ar,.mindar-ui-overlay,.mindar-ui-scanning,.mindar-ui-loading,.mindar-ui-error{display:none!important}
+    .a-enter-vr,
+    .a-enter-ar,
+    .mindar-ui-overlay,
+    .mindar-ui-scanning,
+    .mindar-ui-loading,
+    .mindar-ui-error{display:none!important}
 
-    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(180deg,rgba(2,6,23,.82),rgba(2,6,23,0));pointer-events:none}
+    .topbar{
+      position:fixed;
+      z-index:30;
+      top:0;
+      left:0;
+      right:0;
+      padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));
+      pointer-events:none;
+    }
     .topbar>*{pointer-events:auto}
-    .back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(15,23,42,.74);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px)}
-    .status{max-width:54vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:950;letter-spacing:.06em;color:#02111f;background:rgba(56,189,248,.92);box-shadow:0 8px 30px rgba(14,165,233,.25)}
+    .back{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:#fff;
+      text-decoration:none;
+      background:rgba(15,23,42,.62);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:14px;
+      backdrop-filter:blur(12px);
+    }
+    .status{
+      max-width:52vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      border-radius:999px;
+      padding:8px 13px;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.04em;
+      color:#02111f;
+      background:rgba(56,189,248,.92);
+      box-shadow:0 8px 30px rgba(14,165,233,.22);
+    }
+    .status.found{background:rgba(250,204,21,.95);box-shadow:0 8px 30px rgba(250,204,21,.22)}
 
-    .start{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,#0e7490 0%,#082f49 38%,#020617 72%);text-align:center}
-    .start-card{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+    .start{
+      position:fixed;
+      inset:0;
+      z-index:80;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:radial-gradient(circle at top,#0e7490 0%,#082f49 38%,#020617 72%);
+      text-align:center;
+    }
+    .start-card{
+      width:min(520px,100%);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:28px;
+      padding:26px;
+      background:rgba(255,255,255,.10);
+      box-shadow:0 24px 90px rgba(0,0,0,.5);
+      backdrop-filter:blur(16px);
+    }
     .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
     .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#dbeafe;font-size:15px}
     .start button{border:0;border-radius:18px;background:var(--cyan);color:#00111f;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(56,189,248,.28)}
     .start button:disabled{opacity:.55}
     .hint{font-size:13px;color:#bae6fd;margin-top:12px;line-height:1.45}
     .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
-
-    .panel{position:fixed;z-index:40;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateY(125%);transition:transform .22s ease;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:14px 16px;box-shadow:0 18px 70px rgba(0,0,0,.48);backdrop-filter:blur(16px)}
-    .panel.show{transform:translateY(0)}
-    .found-label{font-size:11px;color:#7dd3fc;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
-    .found-title{margin-top:3px;font-size:clamp(19px,5.4vw,28px);font-weight:950;line-height:1.16;color:#fff}
-    .found-note{margin-top:8px;color:#dbeafe;font-size:14px;line-height:1.45}
-    .actions{display:flex;gap:10px;margin-top:12px}.actions button{flex:1;border:0;border-radius:999px;padding:10px 12px;font-weight:900}.speak{background:var(--yellow);color:#2b2100}.hide{background:rgba(255,255,255,.12);color:#fff}
-
-    .debug{position:fixed;z-index:35;left:12px;bottom:calc(128px + env(safe-area-inset-bottom));max-width:min(420px,calc(100vw - 24px));display:none;background:rgba(15,23,42,.74);border:1px solid rgba(255,255,255,.14);color:#bae6fd;border-radius:14px;padding:8px 10px;font-size:12px;line-height:1.35;backdrop-filter:blur(12px)}
-    .debug.show{display:block}
   </style>
 </head>
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Part 1</a>
-    <div id="status" class="status">1.1 READY</div>
+    <div id="status" class="status">พร้อม</div>
   </div>
 
   <div id="start" class="start">
     <div class="start-card">
       <h1>1.1 สแกนภาพขึ้นข้อความ</h1>
-      <p>กด Start Camera แล้วสแกนภาพเป้าหมายของแผน 1.1 ระบบจะแสดงคำศัพท์/ข้อความภาษาอังกฤษแบบ AR</p>
+      <p>กด Start Camera แล้วสแกนภาพเป้าหมายของแผน 1.1 ระบบจะแสดงข้อความภาษาอังกฤษแบบ 3D AR</p>
       <button id="startBtn" type="button">Start Camera</button>
       <div class="hint">ต้องมีไฟล์ <b>assets/targets/part1-1.mind</b> และอนุญาตใช้กล้อง</div>
       <div id="error" class="error"></div>
     </div>
   </div>
-
-  <div id="debug" class="debug"></div>
-
-  <aside id="panel" class="panel" aria-live="polite">
-    <div id="foundLabel" class="found-label">Vocabulary Found</div>
-    <div id="foundTitle" class="found-title"></div>
-    <div id="foundNote" class="found-note"></div>
-    <div class="actions">
-      <button id="speakBtn" class="speak" type="button">Speak</button>
-      <button id="hideBtn" class="hide" type="button">Hide</button>
-    </div>
-  </aside>
 
   <a-scene
     id="scene"
@@ -117,37 +163,23 @@
     const startBtn = document.getElementById('startBtn');
     const errorEl = document.getElementById('error');
     const statusEl = document.getElementById('status');
-    const panel = document.getElementById('panel');
-    const foundLabel = document.getElementById('foundLabel');
-    const foundTitle = document.getElementById('foundTitle');
-    const foundNote = document.getElementById('foundNote');
-    const speakBtn = document.getElementById('speakBtn');
-    const hideBtn = document.getElementById('hideBtn');
-    const debugEl = document.getElementById('debug');
 
     let vocabData = [];
-    let currentSpeakText = '';
     let sceneReady = false;
     let dataReady = false;
-    let arStarted = false;
     const foundTargets = new Set();
 
-    function debug(msg, sticky=false){
-      console.log('[1.1]', msg);
-      debugEl.textContent = msg;
-      debugEl.classList.add('show');
-      if(!sticky){
-        clearTimeout(debugEl._t);
-        debugEl._t = setTimeout(()=>debugEl.classList.remove('show'), 2600);
-      }
-    }
+    function log(msg){ console.log('[1.1]', msg); }
 
     function showError(message){
       errorEl.style.display = 'block';
       errorEl.textContent = message;
     }
 
-    function setStatus(text){ statusEl.textContent = text; }
+    function setStatus(text, found=false){
+      statusEl.textContent = text;
+      statusEl.classList.toggle('found', !!found);
+    }
 
     function waitForSceneLoaded(){
       return new Promise(resolve=>{
@@ -162,92 +194,102 @@
         if(!res.ok) throw new Error('HTTP ' + res.status);
         return true;
       }catch(err){
-        throw new Error('ไม่พบไฟล์ part1-1.mind ที่ ' + MIND_URL + ' กรุณาสร้างไฟล์ .mind แล้วอัปโหลดไปที่ assets/targets/part1-1.mind');
+        throw new Error('ไม่พบไฟล์ part1-1.mind กรุณาสร้างไฟล์ .mind แล้วอัปโหลดไปที่ assets/targets/part1-1.mind');
       }
     }
 
-    function speak(text){
-      if(!text || !('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'en-US';
-      utter.rate = 0.86;
-      utter.pitch = 1;
-      window.speechSynthesis.speak(utter);
+    function safeText(value){
+      return String(value || '')
+        .replace(/;/g, ',')
+        .replace(/\n/g, ' ')
+        .trim();
     }
 
-    function firstTerm(item){
-      if(item.terms && item.terms.length) return item.terms[0];
-      return item.displayText || '';
+    function getTerms(item){
+      if(Array.isArray(item.terms) && item.terms.length){
+        return item.terms.map(safeText).filter(Boolean).slice(0, 5);
+      }
+      if(item.displayText){
+        return String(item.displayText)
+          .split(',')
+          .map(safeText)
+          .filter(Boolean)
+          .slice(0, 5);
+      }
+      return [];
     }
 
-    function targetLabel(index){
-      return 'TARGET ' + String(index + 1).padStart(2, '0');
+    function textSizeFor(lines){
+      const longest = lines.reduce((m, t)=>Math.max(m, t.length), 0);
+      if(longest >= 24 || lines.length >= 5) return 0.066;
+      if(longest >= 18 || lines.length >= 4) return 0.076;
+      if(longest >= 14 || lines.length >= 3) return 0.088;
+      return 0.105;
     }
 
-    function showPopup(item){
-      const terms = item.terms && item.terms.length ? item.terms.join(', ') : item.displayText;
-      foundLabel.textContent = item.scanTitle || targetLabel(item.index);
-      foundTitle.textContent = terms || '';
-      foundNote.textContent = item.experience || '';
-      currentSpeakText = terms || '';
-      panel.classList.add('show');
-      setStatus(targetLabel(item.index));
-      if(navigator.vibrate) navigator.vibrate(35);
-      speak(currentSpeakText);
+    function lineGapFor(size){ return size * 1.72; }
+
+    function make3DText(value, y, size, color, shadow=false){
+      const text = document.createElement('a-entity');
+      const z = shadow ? 0.045 : 0.062;
+      const x = shadow ? 0.012 : 0;
+      text.setAttribute('position', `${x} ${y} ${z}`);
+      text.setAttribute('rotation', '0 0 0');
+      text.setAttribute('text-geometry', [
+        'value: ' + safeText(value),
+        'align: center',
+        'size: ' + size,
+        'height: 0.022',
+        'curveSegments: 5',
+        'bevelEnabled: true',
+        'bevelSize: 0.0035',
+        'bevelThickness: 0.0035'
+      ].join('; '));
+      text.setAttribute('material', shadow
+        ? 'color: #020617; opacity: 0.92; transparent: true; metalness: 0.02; roughness: 0.55'
+        : `color: ${color}; emissive: ${color}; emissiveIntensity: 0.08; metalness: 0.04; roughness: 0.32`
+      );
+      return text;
     }
 
-    function hidePopup(){ panel.classList.remove('show'); }
+    function buildFloatingWords(item){
+      const wrapper = document.createElement('a-entity');
+      wrapper.setAttribute('position', '0 0.02 0');
+      wrapper.setAttribute('rotation', '0 0 0');
+
+      const lines = getTerms(item);
+      const size = textSizeFor(lines);
+      const gap = lineGapFor(size);
+      const startY = ((lines.length - 1) * gap) / 2;
+
+      lines.forEach((line, i) => {
+        const y = startY - (i * gap);
+        wrapper.appendChild(make3DText(line, y - 0.012, size, '#020617', true));
+        wrapper.appendChild(make3DText(line, y, size, '#ffffff', false));
+      });
+      return wrapper;
+    }
 
     function buildTargets(){
-      // สร้าง target ตามจำนวนข้อมูลใน JSON โดยไม่ต้องเขียน target เองทีละอัน
       vocabData.forEach(item => {
         const target = document.createElement('a-entity');
         target.setAttribute('mindar-image-target', 'targetIndex: ' + item.index);
-
-        // 3D text หลัก: แสดงคำแรกให้ใหญ่และชัดตามต้นแบบ Part 1 เดิม
-        const word3d = document.createElement('a-entity');
-        word3d.setAttribute('position', '-0.46 0.12 0.05');
-        word3d.setAttribute('rotation', '0 0 0');
-        word3d.setAttribute('scale', '1 1 1');
-        word3d.setAttribute('text-geometry', 'value: ' + firstTerm(item).replace(/;/g, ',') + '; size: 0.11; height: 0.018; curveSegments: 3; bevelEnabled: true; bevelSize: 0.003; bevelThickness: 0.003');
-        word3d.setAttribute('material', 'color: #38bdf8; emissive: #0284c7; emissiveIntensity: 0.18; metalness: 0.05; roughness: 0.35');
-
-        // พื้นหลังโปร่งเล็กน้อยเพื่อให้อ่านง่าย แต่ไม่บังภาพทั้งจอ
-        const plate = document.createElement('a-plane');
-        plate.setAttribute('position', '0 -0.02 0.02');
-        plate.setAttribute('width', '1.24');
-        plate.setAttribute('height', '0.66');
-        plate.setAttribute('color', '#020617');
-        plate.setAttribute('opacity', '0.56');
-        plate.setAttribute('material', 'transparent: true; side: double');
-
-        // รายการคำอื่น ๆ เป็น flat text fallback เพื่ออ่านได้แน่นอนบนมือถือ
-        const allTerms = document.createElement('a-text');
-        const displayLines = item.terms && item.terms.length ? item.terms.slice(0,5).join('\n') : (item.displayText || '');
-        allTerms.setAttribute('value', displayLines);
-        allTerms.setAttribute('position', '0 -0.08 0.055');
-        allTerms.setAttribute('align', 'center');
-        allTerms.setAttribute('color', '#ffffff');
-        allTerms.setAttribute('width', '1.55');
-        allTerms.setAttribute('wrap-count', '22');
-        allTerms.setAttribute('side', 'double');
-
-        target.appendChild(plate);
-        target.appendChild(word3d);
-        target.appendChild(allTerms);
+        target.appendChild(buildFloatingWords(item));
 
         target.addEventListener('targetFound', () => {
           foundTargets.add(item.index);
-          debug('พบภาพ: ' + targetLabel(item.index));
-          showPopup(item);
+          setStatus('เจอแล้ว', true);
+          log('พบภาพ index ' + item.index);
+          if(navigator.vibrate) navigator.vibrate(35);
         });
+
         target.addEventListener('targetLost', () => {
           foundTargets.delete(item.index);
           if(foundTargets.size === 0){
-            setStatus('SCANNING');
+            setStatus('กำลังสแกน', false);
           }
         });
+
         scene.appendChild(target);
       });
     }
@@ -259,49 +301,41 @@
       if(!Array.isArray(vocabData) || vocabData.length === 0) throw new Error('part1-1.json ไม่มีข้อมูล');
       buildTargets();
       dataReady = true;
-      debug('โหลดข้อมูล 1.1 แล้ว: ' + vocabData.length + ' targets');
+      log('โหลดข้อมูล 1.1 แล้ว: ' + vocabData.length + ' targets');
     }
 
     async function startAR(){
       try{
         startBtn.disabled = true;
         errorEl.style.display = 'none';
-        setStatus('STARTING');
-        debug('กำลังตรวจไฟล์ .mind...', true);
+        setStatus('กำลังเริ่ม');
         await checkMindFile();
-        debug('พบไฟล์ .mind แล้ว กำลังเปิดกล้อง...', true);
         await waitForSceneLoaded();
         if(!dataReady) await loadData();
         const sys = scene.systems['mindar-image-system'];
         if(!sys) throw new Error('MindAR system ยังไม่พร้อม');
         await sys.start();
-        arStarted = true;
         startScreen.style.display = 'none';
-        setStatus('SCANNING');
-        debug('เปิดกล้องสำเร็จ กำลังสแกนภาพ');
+        setStatus('กำลังสแกน');
       }catch(err){
         console.error(err);
-        setStatus('ERROR');
+        setStatus('ผิดพลาด');
         showError(err.message || 'เริ่ม AR ไม่สำเร็จ กรุณาตรวจไฟล์ .mind และสิทธิ์กล้อง');
-        debug(err.message || 'AR error', true);
         startBtn.disabled = false;
       }
     }
 
-    scene.addEventListener('arReady', () => debug('MindAR พร้อมใช้งาน'));
+    scene.addEventListener('arReady', () => log('MindAR พร้อมใช้งาน'));
     scene.addEventListener('arError', () => {
-      setStatus('CAMERA ERROR');
+      setStatus('กล้องผิดพลาด');
       showError('เปิดกล้องไม่ได้ กรุณาใช้ Chrome บนมือถือ และอนุญาตสิทธิ์กล้อง');
     });
 
-    hideBtn.addEventListener('click', hidePopup);
-    speakBtn.addEventListener('click', () => speak(currentSpeakText));
     startBtn.addEventListener('click', startAR);
 
-    // โหลด JSON ก่อน แต่ยังไม่เปิดกล้องจนกว่าจะกด Start Camera
     loadData().catch(err => {
       console.error(err);
-      setStatus('DATA ERROR');
+      setStatus('ข้อมูลผิดพลาด');
       showError(err.message || 'โหลดข้อมูล 1.1 ไม่สำเร็จ');
     });
   </script>
