@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>1.1 Scan Image to Text</title>
 
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
@@ -18,14 +14,11 @@
       --bg: #020617;
       --line: rgba(255,255,255,.16);
       --part1: #38bdf8;
-      --part1-dark: #0f172a;
+      --part1-dark: #082f49;
       --yellow: #facc15;
     }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     html, body {
       margin: 0;
@@ -38,8 +31,7 @@
       touch-action: manipulation;
     }
 
-    a-scene,
-    a-scene canvas {
+    a-scene, a-scene canvas {
       position: fixed !important;
       inset: 0 !important;
       width: 100vw !important;
@@ -58,12 +50,7 @@
       background: #000 !important;
     }
 
-    .a-enter-vr,
-    .a-enter-ar,
-    .mindar-ui-overlay,
-    .mindar-ui-scanning,
-    .mindar-ui-loading,
-    .mindar-ui-error {
+    .a-enter-vr, .a-enter-ar, .mindar-ui-overlay, .mindar-ui-scanning, .mindar-ui-loading, .mindar-ui-error {
       display: none !important;
     }
 
@@ -82,9 +69,7 @@
       pointer-events: none;
     }
 
-    .topbar > * {
-      pointer-events: auto;
-    }
+    .topbar > * { pointer-events: auto; }
 
     .back {
       display: inline-flex;
@@ -169,9 +154,7 @@
       box-shadow: 0 12px 30px rgba(56,189,248,.28);
     }
 
-    .start button:disabled {
-      opacity: .55;
-    }
+    .start button:disabled { opacity: .55; }
 
     .hint {
       font-size: 13px;
@@ -205,9 +188,7 @@
       <h1>1.1 Scan Image to Text</h1>
       <p>Tap Start Camera and scan a target image. English words will appear as 3D AR text.</p>
       <button id="startBtn" type="button">Start Camera</button>
-      <div class="hint">
-        Best on mobile Chrome. Please allow camera permission.
-      </div>
+      <div class="hint">Best on mobile Chrome. Please allow camera permission.</div>
       <div id="error" class="error"></div>
     </div>
   </div>
@@ -222,14 +203,10 @@
     embedded
   >
     <a-assets timeout="15000">
-      <a-asset-item
-        id="fontBold"
-        src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"
-      ></a-asset-item>
+      <a-asset-item id="fontBold" src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
     <a-entity light="type: ambient; intensity: 1.35"></a-entity>
     <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
   </a-scene>
@@ -263,10 +240,7 @@
     }
 
     function cleanText(value) {
-      return String(value || '')
-        .replace(/;/g, ',')
-        .replace(/\s+/g, ' ')
-        .trim();
+      return String(value || '').replace(/;/g, ',').replace(/\s+/g, ' ').trim();
     }
 
     function getTerms(item) {
@@ -275,27 +249,40 @@
       }
 
       if (item.displayText) {
-        return String(item.displayText)
-          .split(',')
-          .map(cleanText)
-          .filter(Boolean);
+        return String(item.displayText).split(',').map(cleanText).filter(Boolean);
       }
 
-      if (item.word) {
-        return [cleanText(item.word)];
-      }
-
+      if (item.word) return [cleanText(item.word)];
       return [];
     }
 
     function getTextSize(lines) {
       const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
+      if (lines.length >= 6 || longest >= 26) return 0.034;
+      if (lines.length >= 5 || longest >= 22) return 0.040;
+      if (lines.length >= 4 || longest >= 18) return 0.046;
+      if (lines.length >= 3 || longest >= 14) return 0.054;
+      return 0.065;
+    }
 
-      if (lines.length >= 6 || longest >= 26) return 0.045;
-      if (lines.length >= 5 || longest >= 22) return 0.052;
-      if (lines.length >= 4 || longest >= 18) return 0.060;
-      if (lines.length >= 3 || longest >= 14) return 0.072;
-      return 0.088;
+    function centerTextMesh(entity) {
+      const applyCenter = () => {
+        const mesh = entity.getObject3D('mesh');
+        if (!mesh || !mesh.geometry) return;
+
+        mesh.geometry.computeBoundingBox();
+        const box = mesh.geometry.boundingBox;
+        if (!box) return;
+
+        const centerX = (box.min.x + box.max.x) / 2;
+        mesh.position.x = -centerX;
+      };
+
+      entity.addEventListener('object3dset', applyCenter);
+      setTimeout(applyCenter, 50);
+      setTimeout(applyCenter, 150);
+      setTimeout(applyCenter, 300);
+      setTimeout(applyCenter, 600);
     }
 
     function createTextGeometry(value, position, size, isShadow = false) {
@@ -307,7 +294,6 @@
       text.setAttribute('text-geometry', {
         value: cleanText(value),
         font: '#fontBold',
-        align: 'center',
         size: size,
         height: 0.018,
         curveSegments: 5,
@@ -340,39 +326,27 @@
         });
       }
 
+      centerTextMesh(text);
       return text;
     }
 
     function buildTextGroup(item) {
       const group = document.createElement('a-entity');
       const lines = getTerms(item);
-
       if (!lines.length) return group;
 
       const size = getTextSize(lines);
       const gap = size * 1.55;
       const startY = ((lines.length - 1) * gap) / 2;
 
-      // วางไว้ตรงกลาง target
       group.setAttribute('position', '0 0 0.06');
       group.setAttribute('rotation', '0 0 0');
 
       lines.forEach((line, index) => {
         const y = startY - (index * gap);
 
-        const shadow = createTextGeometry(
-          line,
-          `0.008 ${y - 0.008} -0.010`,
-          size,
-          true
-        );
-
-        const front = createTextGeometry(
-          line,
-          `0 ${y} 0`,
-          size,
-          false
-        );
+        const shadow = createTextGeometry(line, `0.008 ${y - 0.008} -0.010`, size, true);
+        const front = createTextGeometry(line, `0 ${y} 0`, size, false);
 
         group.appendChild(shadow);
         group.appendChild(front);
@@ -399,9 +373,7 @@
 
         target.addEventListener('targetLost', () => {
           foundTargets.delete(item.index);
-          if (foundTargets.size === 0) {
-            setStatus('Scanning', false);
-          }
+          if (foundTargets.size === 0) setStatus('Scanning', false);
         });
 
         scene.appendChild(target);
@@ -412,13 +384,9 @@
 
     async function loadData() {
       const response = await fetch(DATA_URL, { cache: 'no-store' });
-
-      if (!response.ok) {
-        throw new Error('Cannot load part1-1.json');
-      }
+      if (!response.ok) throw new Error('Cannot load part1-1.json');
 
       vocabData = await response.json();
-
       if (!Array.isArray(vocabData) || vocabData.length === 0) {
         throw new Error('part1-1.json has no data');
       }
@@ -429,41 +397,29 @@
 
     function waitForSceneLoaded() {
       return new Promise((resolve) => {
-        if (scene.hasLoaded) {
-          resolve();
-        } else {
-          scene.addEventListener('loaded', resolve, { once: true });
-        }
+        if (scene.hasLoaded) resolve();
+        else scene.addEventListener('loaded', resolve, { once: true });
       });
     }
 
     async function checkMindFile() {
       const response = await fetch(MIND_URL, { cache: 'no-store' });
-
-      if (!response.ok) {
-        throw new Error('Cannot find assets/targets/part1-1.mind');
-      }
+      if (!response.ok) throw new Error('Cannot find assets/targets/part1-1.mind');
     }
 
     async function startAR() {
       try {
         startBtn.disabled = true;
         errorEl.style.display = 'none';
-
         setStatus('Starting');
 
         await checkMindFile();
         await waitForSceneLoaded();
 
-        if (!dataReady) {
-          await loadData();
-        }
+        if (!dataReady) await loadData();
 
         const mindarSystem = scene.systems['mindar-image-system'];
-
-        if (!mindarSystem) {
-          throw new Error('MindAR system is not ready');
-        }
+        if (!mindarSystem) throw new Error('MindAR system is not ready');
 
         await mindarSystem.start();
 
@@ -477,9 +433,7 @@
       }
     }
 
-    scene.addEventListener('arReady', () => {
-      console.log('[1.1] AR ready');
-    });
+    scene.addEventListener('arReady', () => console.log('[1.1] AR ready'));
 
     scene.addEventListener('arError', () => {
       setStatus('Camera Error');
