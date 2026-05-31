@@ -1,40 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>1.1 สแกนภาพขึ้นข้อความ</title>
-  <link rel="stylesheet" href="../../style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020617;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.a-enter-vr{display:none!important}a-scene{width:100%;height:100%}
+    .top{position:fixed;z-index:20;top:0;left:0;right:0;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(2,6,23,.86),transparent);pointer-events:none}.top>*{pointer-events:auto}.back{color:#fff;text-decoration:none;background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:8px 12px;font-weight:800}.pill{background:rgba(14,165,233,.9);color:#00111f;border-radius:999px;padding:8px 12px;font-weight:950}
+    .start{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at top,#0e7490,#020617 62%);display:flex;align-items:center;justify-content:center;text-align:center;padding:22px}.start-card{max-width:520px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;box-shadow:0 24px 80px rgba(0,0,0,.42)}.start h1{font-size:32px;margin:0 0 12px}.start p{color:#dbeafe;line-height:1.55}.start button{border:0;border-radius:18px;background:#38bdf8;color:#00111f;font-weight:950;font-size:17px;padding:14px 22px}.hint{font-size:13px;color:#bae6fd;margin-top:12px}.error{display:none;color:#fecaca;margin-top:12px;line-height:1.45}
+    .panel{position:fixed;z-index:22;left:12px;right:12px;bottom:16px;background:rgba(2,6,23,.84);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:14px 16px;box-shadow:0 18px 70px rgba(0,0,0,.45);transform:translateY(120%);transition:.22s ease}.panel.show{transform:translateY(0)}.label{font-size:12px;color:#7dd3fc;font-weight:950;text-transform:uppercase;letter-spacing:.08em}.word{font-size:clamp(20px,5vw,28px);font-weight:950;line-height:1.18;margin-top:3px}.note{font-size:14px;color:#dbeafe;line-height:1.45;margin-top:8px}.actions{display:flex;gap:10px;margin-top:12px}.actions button{flex:1;border:0;border-radius:999px;padding:10px 12px;font-weight:900}.speak{background:#facc15;color:#2b2100}.hide{background:rgba(255,255,255,.12);color:#fff}
+  </style>
 </head>
-<body class="ar-page">
-  <div class="ar-topbar">
-    <a class="ar-back-btn" href="../index.html">← Back</a>
-    <span class="ar-status">READY</span>
-    <button class="ar-mini-btn" data-speak="Exit">🔊</button>
-  </div>
-  <main class="ar-shell">
-    <section class="ar-card">
-      <div class="ar-hero">
-        <h1 class="ar-title">🖼️ 1.1 สแกนภาพขึ้นข้อความ</h1>
-        <p class="ar-desc">สแกนภาพหรือป้าย แล้วแสดงคำศัพท์ภาษาอังกฤษแบบ AR หน้านี้แทนหน้า Part 1 เดิม</p>
-      </div>
-      <div class="camera-box">
-        <div class="scan-line"></div>
-        <div class="camera-icon">📷</div>
-        <div class="camera-title">Camera / Image Tracking Area</div>
-        <p class="camera-desc">This page keeps the correct sub-page URL and file paths. Connect your MindAR target file and JSON data here when ready.</p>
-      </div>
-      <div class="ar-actions">
-        <button class="btn btn-cyan" data-demo-output="#demo-output">Preview AR Output</button>
-        <button class="btn btn-ghost" data-speak="Exit">Speak</button>
-      </div>
-      <div id="demo-output" class="demo-output visually-hidden">
-        <div class="demo-label">VOCABULARY FOUND</div>
-        <div class="demo-text">Exit · Staff Only · Information Desk</div>
-      </div>
-    </section>
-  </main>
-  <script src="../../script.js"></script>
+<body>
+  <div class="top"><a class="back" href="../">← Part 1</a><div id="status" class="pill">1.1 READY</div></div>
+  <div id="start" class="start"><div class="start-card"><h1>1.1 สแกนภาพขึ้นข้อความ</h1><p>เปิดกล้องแล้วสแกนภาพ target ของแผน 1.1 ระบบจะแสดงคำศัพท์/ข้อความภาษาอังกฤษบนภาพ AR</p><button id="startBtn">Start Camera</button><div class="hint">ต้องมีไฟล์ assets/targets/part1-1.mind</div><div id="error" class="error"></div></div></div>
+  <aside id="panel" class="panel"><div id="label" class="label">Target Found</div><div id="word" class="word"></div><div id="note" class="note"></div><div class="actions"><button id="speak" class="speak">Speak</button><button id="hide" class="hide">Hide</button></div></aside>
+  <a-scene id="scene" mindar-image="imageTargetSrc: ../../assets/targets/part1-1.mind; autoStart: false; uiLoading: yes; uiScanning: yes; filterMinCF:0.0001; filterBeta:0.001" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" embedded>
+    <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
+  </a-scene>
+  <script>
+    const DATA_URL='../../assets/data/part1-1.json';
+    const scene=document.getElementById('scene'), start=document.getElementById('start'), startBtn=document.getElementById('startBtn'), errorEl=document.getElementById('error'), statusEl=document.getElementById('status');
+    const panel=document.getElementById('panel'), label=document.getElementById('label'), word=document.getElementById('word'), note=document.getElementById('note'), speakBtn=document.getElementById('speak'), hideBtn=document.getElementById('hide');
+    let data=[], currentText='';
+    function speak(text){ if(!('speechSynthesis' in window)||!text)return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=.88; speechSynthesis.speak(u); }
+    function setPanel(item){ if(!item){statusEl.textContent='1.1 READY'; return;} label.textContent=item.scanTitle||'Target Found'; word.textContent=item.displayText||''; note.textContent=item.experience||''; currentText=(item.terms&&item.terms.length?item.terms.join(', '):item.displayText)||''; panel.classList.add('show'); statusEl.textContent='TARGET '+String(item.index+1).padStart(2,'0'); if(navigator.vibrate)navigator.vibrate(35); speak(currentText); }
+    function build(){ data.forEach(item=>{ const t=document.createElement('a-entity'); t.setAttribute('mindar-image-target','targetIndex: '+item.index); const bg=document.createElement('a-plane'); bg.setAttribute('position','0 0 0.01'); bg.setAttribute('width','1.35'); bg.setAttribute('height','.86'); bg.setAttribute('color','#020617'); bg.setAttribute('opacity','.72'); bg.setAttribute('material','transparent:true'); const txt=document.createElement('a-text'); txt.setAttribute('value', (item.terms&&item.terms.length?item.terms.slice(0,5).join('\n'):item.displayText)); txt.setAttribute('align','center'); txt.setAttribute('color','#38bdf8'); txt.setAttribute('width','1.45'); txt.setAttribute('wrap-count','18'); txt.setAttribute('position','0 0 0.04'); txt.setAttribute('side','double'); t.appendChild(bg); t.appendChild(txt); t.addEventListener('targetFound',()=>setPanel(item)); t.addEventListener('targetLost',()=>{statusEl.textContent='SEARCHING';}); scene.appendChild(t); }); }
+    async function init(){ const r=await fetch(DATA_URL,{cache:'no-store'}); if(!r.ok)throw new Error('JSON'); data=await r.json(); build(); }
+    async function startAR(){ try{ startBtn.disabled=true; await scene.systems['mindar-image-system'].start(); start.style.display='none'; statusEl.textContent='SCANNING'; }catch(e){ console.error(e); errorEl.style.display='block'; errorEl.textContent='เริ่ม AR ไม่สำเร็จ: ตรวจสอบว่า assets/targets/part1-1.mind มีอยู่และ path ถูกต้อง'; startBtn.disabled=false; } }
+    hideBtn.onclick=()=>panel.classList.remove('show'); speakBtn.onclick=()=>speak(currentText); startBtn.onclick=startAR; init().catch(e=>{console.error(e); errorEl.style.display='block'; errorEl.textContent='โหลดข้อมูล part1-1.json ไม่สำเร็จ';});
+  </script>
 </body>
 </html>
