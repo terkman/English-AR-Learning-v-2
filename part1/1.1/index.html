@@ -1,143 +1,216 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>1.1 สแกนภาพขึ้นข้อความ</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"
+  />
 
-  <!-- โครง MindAR + 3D Text แบบ Part 1 ของ AR v1 -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <title>1.1 Scan Image to Text</title>
+
+  <!-- A-Frame + MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <!-- 3D extruded text -->
   <script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
 
   <style>
-    :root{
-      --bg:#020617;
-      --line:rgba(255,255,255,.16);
-      --cyan:#38bdf8;
-      --yellow:#facc15;
+    :root {
+      --bg: #020617;
+      --line: rgba(255,255,255,.16);
+      --cyan: #38bdf8;
+      --yellow: #facc15;
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      background:var(--bg);
-      color:#fff;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: manipulation;
     }
 
     a-scene,
-    a-scene canvas{
-      position:fixed!important;
-      inset:0!important;
-      width:100vw!important;
-      height:100vh!important;
-      z-index:1!important;
-      background:transparent!important;
+    a-scene canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+      background: transparent !important;
     }
-    video{
-      position:fixed!important;
-      inset:0!important;
-      width:100vw!important;
-      height:100vh!important;
-      object-fit:cover!important;
-      z-index:0!important;
-      background:#000!important;
+
+    video {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      background: #000 !important;
     }
+
     .a-enter-vr,
     .a-enter-ar,
     .mindar-ui-overlay,
     .mindar-ui-scanning,
     .mindar-ui-loading,
-    .mindar-ui-error{display:none!important}
+    .mindar-ui-error {
+      display: none !important;
+    }
 
-    .topbar{
-      position:fixed;
-      z-index:30;
-      top:0;
-      left:0;
-      right:0;
-      padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));
-      pointer-events:none;
+    .topbar {
+      position: fixed;
+      z-index: 30;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(2,6,23,.55), rgba(2,6,23,0));
+      pointer-events: none;
     }
-    .topbar>*{pointer-events:auto}
-    .back{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      color:#fff;
-      text-decoration:none;
-      background:rgba(15,23,42,.62);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      font-size:14px;
-      backdrop-filter:blur(12px);
-    }
-    .status{
-      max-width:52vw;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      border-radius:999px;
-      padding:8px 13px;
-      font-size:12px;
-      font-weight:950;
-      letter-spacing:.04em;
-      color:#02111f;
-      background:rgba(56,189,248,.92);
-      box-shadow:0 8px 30px rgba(14,165,233,.22);
-    }
-    .status.found{background:rgba(250,204,21,.95);box-shadow:0 8px 30px rgba(250,204,21,.22)}
 
-    .start{
-      position:fixed;
-      inset:0;
-      z-index:80;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:22px;
-      background:radial-gradient(circle at top,#0e7490 0%,#082f49 38%,#020617 72%);
-      text-align:center;
+    .topbar > * {
+      pointer-events: auto;
     }
-    .start-card{
-      width:min(520px,100%);
-      border:1px solid rgba(255,255,255,.18);
-      border-radius:28px;
-      padding:26px;
-      background:rgba(255,255,255,.10);
-      box-shadow:0 24px 90px rgba(0,0,0,.5);
-      backdrop-filter:blur(16px);
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      text-decoration: none;
+      background: rgba(15,23,42,.62);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 900;
+      font-size: 14px;
+      backdrop-filter: blur(12px);
     }
-    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
-    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#dbeafe;font-size:15px}
-    .start button{border:0;border-radius:18px;background:var(--cyan);color:#00111f;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(56,189,248,.28)}
-    .start button:disabled{opacity:.55}
-    .hint{font-size:13px;color:#bae6fd;margin-top:12px;line-height:1.45}
-    .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
+
+    .status {
+      max-width: 48vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .04em;
+      color: #02111f;
+      background: rgba(56,189,248,.92);
+      box-shadow: 0 8px 30px rgba(14,165,233,.22);
+    }
+
+    .status.found {
+      background: rgba(250,204,21,.96);
+      box-shadow: 0 8px 30px rgba(250,204,21,.22);
+    }
+
+    .start {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: radial-gradient(circle at top, #0e7490 0%, #082f49 38%, #020617 72%);
+      text-align: center;
+    }
+
+    .start-card {
+      width: min(520px, 100%);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 28px;
+      padding: 26px;
+      background: rgba(255,255,255,.10);
+      box-shadow: 0 24px 90px rgba(0,0,0,.5);
+      backdrop-filter: blur(16px);
+    }
+
+    .start h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 8vw, 38px);
+      line-height: 1.08;
+      font-weight: 950;
+    }
+
+    .start p {
+      margin: 8px auto 16px;
+      max-width: 420px;
+      line-height: 1.55;
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .start button {
+      border: 0;
+      border-radius: 18px;
+      background: var(--cyan);
+      color: #00111f;
+      font-size: 17px;
+      font-weight: 950;
+      padding: 14px 22px;
+      box-shadow: 0 12px 30px rgba(56,189,248,.28);
+    }
+
+    .start button:disabled {
+      opacity: .55;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #bae6fd;
+      margin-top: 12px;
+      line-height: 1.45;
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      color: #fecaca;
+      background: rgba(127,29,29,.32);
+      border: 1px solid rgba(254,202,202,.25);
+      border-radius: 14px;
+      padding: 10px;
+      line-height: 1.45;
+      text-align: left;
+    }
   </style>
 </head>
+
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Part 1</a>
-    <div id="status" class="status">พร้อม</div>
+    <div id="status" class="status">Ready</div>
   </div>
 
   <div id="start" class="start">
     <div class="start-card">
-      <h1>1.1 สแกนภาพขึ้นข้อความ</h1>
-      <p>กด Start Camera แล้วสแกนภาพเป้าหมายของแผน 1.1 ระบบจะแสดงข้อความภาษาอังกฤษแบบ 3D AR</p>
+      <h1>1.1 Scan Image to Text</h1>
+      <p>Tap Start Camera and scan a target image. English words will appear as 3D AR text.</p>
       <button id="startBtn" type="button">Start Camera</button>
-      <div class="hint">ต้องมีไฟล์ <b>assets/targets/part1-1.mind</b> และอนุญาตใช้กล้อง</div>
+      <div class="hint">
+        Best on mobile Chrome. Please allow camera permission.
+      </div>
       <div id="error" class="error"></div>
     </div>
   </div>
@@ -149,9 +222,19 @@
     renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded>
-    <a-assets timeout="10000"></a-assets>
+    embedded
+  >
+    <a-assets timeout="15000">
+      <a-asset-item
+        id="fontBold"
+        src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"
+      ></a-asset-item>
+    </a-assets>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
   </a-scene>
 
   <script>
@@ -165,178 +248,249 @@
     const statusEl = document.getElementById('status');
 
     let vocabData = [];
-    let sceneReady = false;
     let dataReady = false;
+    let targetsBuilt = false;
     const foundTargets = new Set();
 
-    function log(msg){ console.log('[1.1]', msg); }
-
-    function showError(message){
-      errorEl.style.display = 'block';
-      errorEl.textContent = message;
-    }
-
-    function setStatus(text, found=false){
+    function setStatus(text, found = false) {
       statusEl.textContent = text;
       statusEl.classList.toggle('found', !!found);
     }
 
-    function waitForSceneLoaded(){
-      return new Promise(resolve=>{
-        if(scene.hasLoaded){ sceneReady = true; resolve(); }
-        else scene.addEventListener('loaded', ()=>{ sceneReady = true; resolve(); }, {once:true});
-      });
+    function showError(message) {
+      errorEl.style.display = 'block';
+      errorEl.textContent = message;
     }
 
-    async function checkMindFile(){
-      try{
-        const res = await fetch(MIND_URL, {cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        return true;
-      }catch(err){
-        throw new Error('ไม่พบไฟล์ part1-1.mind กรุณาสร้างไฟล์ .mind แล้วอัปโหลดไปที่ assets/targets/part1-1.mind');
-      }
-    }
-
-    function safeText(value){
+    function cleanText(value) {
       return String(value || '')
         .replace(/;/g, ',')
-        .replace(/\n/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
     }
 
-    function getTerms(item){
-      if(Array.isArray(item.terms) && item.terms.length){
-        return item.terms.map(safeText).filter(Boolean).slice(0, 5);
+    function getTerms(item) {
+      if (Array.isArray(item.terms) && item.terms.length > 0) {
+        return item.terms.map(cleanText).filter(Boolean);
       }
-      if(item.displayText){
+
+      if (item.displayText) {
         return String(item.displayText)
           .split(',')
-          .map(safeText)
-          .filter(Boolean)
-          .slice(0, 5);
+          .map(cleanText)
+          .filter(Boolean);
       }
+
+      if (item.word) {
+        return [cleanText(item.word)];
+      }
+
       return [];
     }
 
-    function textSizeFor(lines){
-      const longest = lines.reduce((m, t)=>Math.max(m, t.length), 0);
-      if(longest >= 24 || lines.length >= 5) return 0.066;
-      if(longest >= 18 || lines.length >= 4) return 0.076;
-      if(longest >= 14 || lines.length >= 3) return 0.088;
-      return 0.105;
+    function getTextSize(lines) {
+      const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
+
+      if (lines.length >= 6 || longest >= 26) return 0.043;
+      if (lines.length >= 5 || longest >= 22) return 0.050;
+      if (lines.length >= 4 || longest >= 18) return 0.058;
+      if (lines.length >= 3 || longest >= 14) return 0.070;
+      return 0.085;
     }
 
-    function lineGapFor(size){ return size * 1.72; }
-
-    function make3DText(value, y, size, color, shadow=false){
+    function createTextGeometry(value, position, size, isShadow = false) {
       const text = document.createElement('a-entity');
-      const z = shadow ? 0.045 : 0.062;
-      const x = shadow ? 0.012 : 0;
-      text.setAttribute('position', `${x} ${y} ${z}`);
+
+      text.setAttribute('position', position);
       text.setAttribute('rotation', '0 0 0');
-      text.setAttribute('text-geometry', [
-        'value: ' + safeText(value),
-        'align: center',
-        'size: ' + size,
-        'height: 0.022',
-        'curveSegments: 5',
-        'bevelEnabled: true',
-        'bevelSize: 0.0035',
-        'bevelThickness: 0.0035'
-      ].join('; '));
-      text.setAttribute('material', shadow
-        ? 'color: #020617; opacity: 0.92; transparent: true; metalness: 0.02; roughness: 0.55'
-        : `color: ${color}; emissive: ${color}; emissiveIntensity: 0.08; metalness: 0.04; roughness: 0.32`
-      );
+
+      text.setAttribute('text-geometry', {
+        value: cleanText(value),
+        font: '#fontBold',
+        align: 'center',
+        size: size,
+        height: 0.018,
+        curveSegments: 5,
+        bevelEnabled: true,
+        bevelSize: 0.0028,
+        bevelThickness: 0.0028
+      });
+
+      if (isShadow) {
+        text.setAttribute('material', {
+          shader: 'standard',
+          color: '#020617',
+          emissive: '#020617',
+          emissiveIntensity: 0.15,
+          opacity: 0.92,
+          transparent: true,
+          metalness: 0,
+          roughness: 0.65,
+          side: 'double'
+        });
+      } else {
+        text.setAttribute('material', {
+          shader: 'standard',
+          color: '#ffffff',
+          emissive: '#ffffff',
+          emissiveIntensity: 0.55,
+          metalness: 0.02,
+          roughness: 0.28,
+          side: 'double'
+        });
+      }
+
       return text;
     }
 
-    function buildFloatingWords(item){
-      const wrapper = document.createElement('a-entity');
-      wrapper.setAttribute('position', '0 0.02 0');
-      wrapper.setAttribute('rotation', '0 0 0');
-
+    function buildTextGroup(item) {
+      const group = document.createElement('a-entity');
       const lines = getTerms(item);
-      const size = textSizeFor(lines);
-      const gap = lineGapFor(size);
+
+      if (!lines.length) return group;
+
+      const size = getTextSize(lines);
+      const gap = size * 1.55;
       const startY = ((lines.length - 1) * gap) / 2;
 
-      lines.forEach((line, i) => {
-        const y = startY - (i * gap);
-        wrapper.appendChild(make3DText(line, y - 0.012, size, '#020617', true));
-        wrapper.appendChild(make3DText(line, y, size, '#ffffff', false));
+      group.setAttribute('position', '0 0.02 0.08');
+      group.setAttribute('rotation', '0 0 0');
+
+      lines.forEach((line, index) => {
+        const y = startY - (index * gap);
+
+        const shadow = createTextGeometry(
+          line,
+          `0.010 ${y - 0.010} -0.010`,
+          size,
+          true
+        );
+
+        const front = createTextGeometry(
+          line,
+          `0 ${y} 0`,
+          size,
+          false
+        );
+
+        group.appendChild(shadow);
+        group.appendChild(front);
       });
-      return wrapper;
+
+      return group;
     }
 
-    function buildTargets(){
-      vocabData.forEach(item => {
+    function buildTargets() {
+      if (targetsBuilt) return;
+
+      vocabData.forEach((item) => {
         const target = document.createElement('a-entity');
-        target.setAttribute('mindar-image-target', 'targetIndex: ' + item.index);
-        target.appendChild(buildFloatingWords(item));
+        target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
+
+        const textGroup = buildTextGroup(item);
+        target.appendChild(textGroup);
 
         target.addEventListener('targetFound', () => {
           foundTargets.add(item.index);
-          setStatus('เจอแล้ว', true);
-          log('พบภาพ index ' + item.index);
-          if(navigator.vibrate) navigator.vibrate(35);
+          setStatus('Found', true);
+          if (navigator.vibrate) navigator.vibrate(35);
         });
 
         target.addEventListener('targetLost', () => {
           foundTargets.delete(item.index);
-          if(foundTargets.size === 0){
-            setStatus('กำลังสแกน', false);
+          if (foundTargets.size === 0) {
+            setStatus('Scanning', false);
           }
         });
 
         scene.appendChild(target);
       });
+
+      targetsBuilt = true;
     }
 
-    async function loadData(){
-      const res = await fetch(DATA_URL, {cache:'no-store'});
-      if(!res.ok) throw new Error('โหลด part1-1.json ไม่สำเร็จ');
-      vocabData = await res.json();
-      if(!Array.isArray(vocabData) || vocabData.length === 0) throw new Error('part1-1.json ไม่มีข้อมูล');
+    async function loadData() {
+      const response = await fetch(DATA_URL, { cache: 'no-store' });
+
+      if (!response.ok) {
+        throw new Error('Cannot load part1-1.json');
+      }
+
+      vocabData = await response.json();
+
+      if (!Array.isArray(vocabData) || vocabData.length === 0) {
+        throw new Error('part1-1.json has no data');
+      }
+
       buildTargets();
       dataReady = true;
-      log('โหลดข้อมูล 1.1 แล้ว: ' + vocabData.length + ' targets');
     }
 
-    async function startAR(){
-      try{
+    function waitForSceneLoaded() {
+      return new Promise((resolve) => {
+        if (scene.hasLoaded) {
+          resolve();
+        } else {
+          scene.addEventListener('loaded', resolve, { once: true });
+        }
+      });
+    }
+
+    async function checkMindFile() {
+      const response = await fetch(MIND_URL, { cache: 'no-store' });
+
+      if (!response.ok) {
+        throw new Error('Cannot find assets/targets/part1-1.mind');
+      }
+    }
+
+    async function startAR() {
+      try {
         startBtn.disabled = true;
         errorEl.style.display = 'none';
-        setStatus('กำลังเริ่ม');
+
+        setStatus('Starting');
+
         await checkMindFile();
         await waitForSceneLoaded();
-        if(!dataReady) await loadData();
-        const sys = scene.systems['mindar-image-system'];
-        if(!sys) throw new Error('MindAR system ยังไม่พร้อม');
-        await sys.start();
+
+        if (!dataReady) {
+          await loadData();
+        }
+
+        const mindarSystem = scene.systems['mindar-image-system'];
+
+        if (!mindarSystem) {
+          throw new Error('MindAR system is not ready');
+        }
+
+        await mindarSystem.start();
+
         startScreen.style.display = 'none';
-        setStatus('กำลังสแกน');
-      }catch(err){
-        console.error(err);
-        setStatus('ผิดพลาด');
-        showError(err.message || 'เริ่ม AR ไม่สำเร็จ กรุณาตรวจไฟล์ .mind และสิทธิ์กล้อง');
+        setStatus('Scanning');
+      } catch (error) {
+        console.error(error);
+        setStatus('Error');
+        showError(error.message || 'Cannot start AR. Please check camera permission and .mind file.');
         startBtn.disabled = false;
       }
     }
 
-    scene.addEventListener('arReady', () => log('MindAR พร้อมใช้งาน'));
+    scene.addEventListener('arReady', () => {
+      console.log('[1.1] AR ready');
+    });
+
     scene.addEventListener('arError', () => {
-      setStatus('กล้องผิดพลาด');
-      showError('เปิดกล้องไม่ได้ กรุณาใช้ Chrome บนมือถือ และอนุญาตสิทธิ์กล้อง');
+      setStatus('Camera Error');
+      showError('Camera access failed. Please allow camera permission and reload this page.');
     });
 
     startBtn.addEventListener('click', startAR);
 
-    loadData().catch(err => {
-      console.error(err);
-      setStatus('ข้อมูลผิดพลาด');
-      showError(err.message || 'โหลดข้อมูล 1.1 ไม่สำเร็จ');
+    loadData().catch((error) => {
+      console.error(error);
+      setStatus('Data Error');
+      showError(error.message || 'Cannot load AR data.');
     });
   </script>
 </body>
