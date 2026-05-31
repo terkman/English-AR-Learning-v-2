@@ -267,22 +267,50 @@
 
     function centerTextMesh(entity) {
       const applyCenter = () => {
-        const mesh = entity.getObject3D('mesh');
-        if (!mesh || !mesh.geometry) return;
+        let didCenter = false;
 
-        mesh.geometry.computeBoundingBox();
-        const box = mesh.geometry.boundingBox;
-        if (!box) return;
+        entity.object3D.traverse((child) => {
+          if (!child.isMesh || !child.geometry) return;
+          if (child.geometry.userData && child.geometry.userData.centeredX) return;
 
-        const centerX = (box.min.x + box.max.x) / 2;
-        mesh.position.x = -centerX;
+          child.geometry.computeBoundingBox();
+          const box = child.geometry.boundingBox;
+          if (!box) return;
+
+          const centerX = (box.min.x + box.max.x) / 2;
+
+          // ขยับ geometry จริง ๆ ให้จุดกึ่งกลางของตัวอักษรมาอยู่ที่ x = 0
+          // วิธีนี้เสถียรกว่าการขยับ mesh.position.x บนมือถือ
+          child.geometry.translate(-centerX, 0, 0);
+          child.geometry.computeBoundingBox();
+
+          child.geometry.userData = child.geometry.userData || {};
+          child.geometry.userData.centeredX = true;
+
+          didCenter = true;
+        });
+
+        return didCenter;
       };
 
-      entity.addEventListener('object3dset', applyCenter);
-      setTimeout(applyCenter, 50);
-      setTimeout(applyCenter, 150);
-      setTimeout(applyCenter, 300);
-      setTimeout(applyCenter, 600);
+      const tryCenter = (attempt = 0) => {
+        if (applyCenter()) return;
+        if (attempt > 30) return;
+        requestAnimationFrame(() => tryCenter(attempt + 1));
+      };
+
+      entity.addEventListener('object3dset', () => tryCenter());
+      entity.addEventListener('componentinitialized', (event) => {
+        if (event.detail && event.detail.name === 'text-geometry') {
+          tryCenter();
+        }
+      });
+
+      tryCenter();
+      setTimeout(() => tryCenter(), 100);
+      setTimeout(() => tryCenter(), 300);
+      setTimeout(() => tryCenter(), 700);
+      setTimeout(() => tryCenter(), 1200);
     }
 
     function createTextGeometry(value, position, size, isShadow = false) {
@@ -294,6 +322,7 @@
       text.setAttribute('text-geometry', {
         value: cleanText(value),
         font: '#fontBold',
+        align: 'center',
         size: size,
         height: 0.018,
         curveSegments: 5,
