@@ -226,10 +226,11 @@
 
     const PART1_COLOR = '#38bdf8';
     const PART1_SHADOW = '#082f49';
+    const PART1_STROKE = '#00131d';
 
     // ปรับระยะห่างระหว่างตัวอักษรตรงนี้
     // 0.000 = ชิดแบบเดิม, 0.004 = ห่างเล็กน้อย, 0.008 = ห่างชัด, 0.012 = ห่างมาก
-    const LETTER_GAP = 0.050;
+    const LETTER_GAP = 0.010;
 
     let vocabData = [];
     let dataReady = false;
@@ -325,7 +326,7 @@
       setTimeout(() => tryCenter(), 1200);
     }
 
-    function createCharGeometry(char, position, size, isShadow = false) {
+    function createCharGeometry(char, position, size, role = 'front') {
       const text = document.createElement('a-entity');
       text.setAttribute('position', position);
       text.setAttribute('rotation', '0 0 0');
@@ -342,13 +343,25 @@
         bevelThickness: 0.0025
       });
 
-      if (isShadow) {
+      if (role === 'stroke') {
+        text.setAttribute('material', {
+          shader: 'standard',
+          color: PART1_STROKE,
+          emissive: PART1_STROKE,
+          emissiveIntensity: 0.10,
+          opacity: 0.98,
+          transparent: true,
+          metalness: 0,
+          roughness: 0.75,
+          side: 'double'
+        });
+      } else if (role === 'shadow') {
         text.setAttribute('material', {
           shader: 'standard',
           color: PART1_SHADOW,
           emissive: PART1_SHADOW,
-          emissiveIntensity: 0.18,
-          opacity: 0.95,
+          emissiveIntensity: 0.16,
+          opacity: 0.70,
           transparent: true,
           metalness: 0,
           roughness: 0.7,
@@ -389,19 +402,37 @@
 
           const shadow = createCharGeometry(
             char,
-            `${(x + 0.008).toFixed(4)} ${(y - 0.008).toFixed(4)} -0.010`,
+            `${(x + 0.007).toFixed(4)} ${(y - 0.007).toFixed(4)} -0.012`,
             size,
-            true
+            'shadow'
           );
+
+          const thinStrokeOffsets = [
+            [-0.004,  0.000],
+            [ 0.004,  0.000],
+            [ 0.000, -0.004],
+            [ 0.000,  0.004]
+          ];
+
+          lineGroup.appendChild(shadow);
+
+          thinStrokeOffsets.forEach(([sx, sy]) => {
+            const stroke = createCharGeometry(
+              char,
+              `${(x + sx).toFixed(4)} ${(y + sy).toFixed(4)} -0.003`,
+              size,
+              'stroke'
+            );
+            lineGroup.appendChild(stroke);
+          });
 
           const front = createCharGeometry(
             char,
-            `${x.toFixed(4)} ${y.toFixed(4)} 0`,
+            `${x.toFixed(4)} ${y.toFixed(4)} 0.002`,
             size,
-            false
+            'front'
           );
 
-          lineGroup.appendChild(shadow);
           lineGroup.appendChild(front);
         }
 
