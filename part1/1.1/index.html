@@ -222,6 +222,7 @@
     const statusEl = document.getElementById('status');
 
     const PART1_COLOR = '#38bdf8';
+    const PART1_STROKE = '#021826';
     const PART1_SHADOW = '#082f49';
 
     let vocabData = [];
@@ -247,11 +248,9 @@
       if (Array.isArray(item.terms) && item.terms.length > 0) {
         return item.terms.map(cleanText).filter(Boolean);
       }
-
       if (item.displayText) {
         return String(item.displayText).split(',').map(cleanText).filter(Boolean);
       }
-
       if (item.word) return [cleanText(item.word)];
       return [];
     }
@@ -268,7 +267,6 @@
     function centerTextMesh(entity) {
       const applyCenter = () => {
         let didCenter = false;
-
         entity.object3D.traverse((child) => {
           if (!child.isMesh || !child.geometry) return;
           if (child.geometry.userData && child.geometry.userData.centeredX) return;
@@ -278,18 +276,12 @@
           if (!box) return;
 
           const centerX = (box.min.x + box.max.x) / 2;
-
-          // ขยับ geometry จริง ๆ ให้จุดกึ่งกลางของตัวอักษรมาอยู่ที่ x = 0
-          // วิธีนี้เสถียรกว่าการขยับ mesh.position.x บนมือถือ
           child.geometry.translate(-centerX, 0, 0);
           child.geometry.computeBoundingBox();
-
           child.geometry.userData = child.geometry.userData || {};
           child.geometry.userData.centeredX = true;
-
           didCenter = true;
         });
-
         return didCenter;
       };
 
@@ -301,9 +293,7 @@
 
       entity.addEventListener('object3dset', () => tryCenter());
       entity.addEventListener('componentinitialized', (event) => {
-        if (event.detail && event.detail.name === 'text-geometry') {
-          tryCenter();
-        }
+        if (event.detail && event.detail.name === 'text-geometry') tryCenter();
       });
 
       tryCenter();
@@ -313,9 +303,8 @@
       setTimeout(() => tryCenter(), 1200);
     }
 
-    function createTextGeometry(value, position, size, isShadow = false) {
+    function createTextGeometry(value, position, size, role = 'front') {
       const text = document.createElement('a-entity');
-
       text.setAttribute('position', position);
       text.setAttribute('rotation', '0 0 0');
 
@@ -331,7 +320,17 @@
         bevelThickness: 0.0025
       });
 
-      if (isShadow) {
+      if (role === 'stroke') {
+        text.setAttribute('material', {
+          shader: 'standard',
+          color: PART1_STROKE,
+          emissive: PART1_STROKE,
+          emissiveIntensity: 0.2,
+          metalness: 0,
+          roughness: 0.65,
+          side: 'double'
+        });
+      } else if (role === 'shadow') {
         text.setAttribute('material', {
           shader: 'standard',
           color: PART1_SHADOW,
@@ -371,13 +370,34 @@
       group.setAttribute('position', '0 0 0.06');
       group.setAttribute('rotation', '0 0 0');
 
+      const strokeOffsets = [
+        [-0.012,  0.000,  0.000],
+        [ 0.012,  0.000,  0.000],
+        [ 0.000,  0.012,  0.000],
+        [ 0.000, -0.012,  0.000],
+        [-0.009, -0.009,  0.000],
+        [ 0.009, -0.009,  0.000],
+        [-0.009,  0.009,  0.000],
+        [ 0.009,  0.009,  0.000],
+      ];
+
       lines.forEach((line, index) => {
         const y = startY - (index * gap);
 
-        const shadow = createTextGeometry(line, `0.008 ${y - 0.008} -0.010`, size, true);
-        const front = createTextGeometry(line, `0 ${y} 0`, size, false);
-
+        const shadow = createTextGeometry(line, `0.010 ${y - 0.010} -0.012`, size, 'shadow');
         group.appendChild(shadow);
+
+        strokeOffsets.forEach(([ox, oy, oz]) => {
+          const stroke = createTextGeometry(
+            line,
+            `${ox.toFixed(3)} ${(y + oy).toFixed(3)} ${oz.toFixed(3)}`,
+            size,
+            'stroke'
+          );
+          group.appendChild(stroke);
+        });
+
+        const front = createTextGeometry(line, `0 ${y} 0.002`, size, 'front');
         group.appendChild(front);
       });
 
