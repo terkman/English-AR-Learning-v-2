@@ -71,7 +71,36 @@
     let dataReady=false;
     let targetsBuilt=false;
     const foundTargets=new Set();
-    const questionCursor={};
+    const QUESTION_STORAGE_KEY = 'part1_3_question_cursor_v1';
+
+    function readQuestionCursor() {
+      try {
+        return JSON.parse(localStorage.getItem(QUESTION_STORAGE_KEY) || '{}');
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function writeQuestionCursor(cursor) {
+      try {
+        localStorage.setItem(QUESTION_STORAGE_KEY, JSON.stringify(cursor));
+      } catch (error) {
+        console.warn('Cannot save question cursor', error);
+      }
+    }
+
+    function getNextQuestionIndex(targetIndex, totalQuestions) {
+      const cursor = readQuestionCursor();
+      const key = String(targetIndex);
+      const currentIndex = Number.isInteger(cursor[key]) ? cursor[key] : 0;
+
+      cursor[key] = (currentIndex + 1) % totalQuestions;
+      writeQuestionCursor(cursor);
+
+      return currentIndex;
+    }
+
+    const activeQuestionIndex = {};
 
     function setStatus(text,found=false){statusEl.textContent=text;statusEl.classList.toggle('found',!!found)}
     function showError(message){errorEl.style.display='block';errorEl.textContent=message}
@@ -80,9 +109,15 @@
     function showQuestion(item){
       const questions=Array.isArray(item.questions)?item.questions.filter(Boolean):[];
       if(!questions.length){hideQuestion();return}
-      const currentIndex=questionCursor[item.index]||0;
-      questionText.textContent=questions[currentIndex];
-      questionCursor[item.index]=(currentIndex+1)%questions.length;
+
+      // เลือกคำถามเพียงครั้งเดียวตอน targetFound
+      // ถ้ายังสแกนภาพเดิมอยู่ จะไม่เปลี่ยนคำถามเอง
+      if (activeQuestionIndex[item.index] === undefined) {
+        activeQuestionIndex[item.index] = getNextQuestionIndex(item.index, questions.length);
+      }
+
+      const currentIndex = activeQuestionIndex[item.index];
+      questionText.textContent = questions[currentIndex];
       questionPanel.classList.add('show');
     }
     function hideQuestion(){questionPanel.classList.remove('show');questionText.textContent=''}
@@ -198,6 +233,11 @@
         });
         target.addEventListener('targetLost',()=>{
           foundTargets.delete(item.index);
+
+          // เมื่อออกจากภาพแล้ว ล้าง active index
+          // เพื่อให้การสแกนครั้งถัดไปเลือกคำถามข้อถัดไปจาก localStorage
+          delete activeQuestionIndex[item.index];
+
           if(foundTargets.size===0){setStatus('Scanning',false);hideQuestion()}
         });
         scene.appendChild(target);
