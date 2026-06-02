@@ -67,6 +67,17 @@
     const TEXT_STROKE='#1c1500';
     const LETTER_GAP=0.010;
 
+    // 2.2 term colors: all yellow-tone, separated by meaning group
+    const TERM_COLORS=[
+      '#FFD60A', // term 1: main yellow
+      '#FBBF24', // term 2: golden yellow
+      '#F59E0B'  // term 3: orange-yellow
+    ];
+
+    // Keep letter gap the same, but increase spacing between term groups
+    const INNER_LINE_GAP_MULTIPLIER=1.35;
+    const TERM_GAP_MULTIPLIER=2.35;
+
     const DATA_URL='../../assets/data/part2-2.json';
     const MIND_URL='../../assets/targets/part2-2.mind';
 
@@ -343,6 +354,184 @@
       const lines=getTextLines(item);
       return buildTextGroupFromLines(lines,getComparisonTextSize(lines),1.48);
     }
+
+
+    // New renderer for 2.2:
+    // - keeps LETTER_GAP unchanged
+    // - colors each term in a different yellow tone
+    // - adds extra space between term groups, not between every line
+    function createColoredCharGeometry(char,position,size,role='front',frontColor=TEXT_COLOR){
+      const text=document.createElement('a-entity');
+      text.setAttribute('position',position);
+      text.setAttribute('rotation','0 0 0');
+      text.setAttribute('text-geometry',{
+        value:char,
+        font:'#fontBold',
+        align:'center',
+        size:size,
+        height:0.018,
+        curveSegments:5,
+        bevelEnabled:true,
+        bevelSize:0.0025,
+        bevelThickness:0.0025
+      });
+
+      if(role==='stroke'){
+        text.setAttribute('material',{
+          shader:'standard',
+          color:TEXT_STROKE,
+          emissive:TEXT_STROKE,
+          emissiveIntensity:0.10,
+          opacity:0.98,
+          transparent:true,
+          metalness:0,
+          roughness:0.75,
+          side:'double'
+        });
+      }else if(role==='shadow'){
+        text.setAttribute('material',{
+          shader:'standard',
+          color:TEXT_SHADOW,
+          emissive:TEXT_SHADOW,
+          emissiveIntensity:0.16,
+          opacity:0.70,
+          transparent:true,
+          metalness:0,
+          roughness:0.7,
+          side:'double'
+        });
+      }else{
+        text.setAttribute('material',{
+          shader:'standard',
+          color:frontColor,
+          emissive:frontColor,
+          emissiveIntensity:0.55,
+          metalness:0.02,
+          roughness:0.25,
+          side:'double'
+        });
+      }
+
+      centerTextMesh(text);
+      return text;
+    }
+
+    function buildColoredLetterSpacedLine(line,y,size,frontColor){
+      const lineGroup=document.createElement('a-entity');
+      const chars=Array.from(cleanText(line));
+      const widths=chars.map(char=>getCharWidth(char,size));
+      const totalWidth=widths.reduce((sum,width)=>sum+width,0)+Math.max(0,chars.length-1)*LETTER_GAP;
+      let cursorX=-totalWidth/2;
+
+      chars.forEach((char,index)=>{
+        const width=widths[index];
+        if(char!==' '){
+          const x=cursorX+width/2;
+
+          const shadow=createColoredCharGeometry(
+            char,
+            `${(x+0.007).toFixed(4)} ${(y-0.007).toFixed(4)} -0.012`,
+            size,
+            'shadow',
+            frontColor
+          );
+          lineGroup.appendChild(shadow);
+
+          const thinStrokeOffsets=[
+            [-0.004,0.000],
+            [0.004,0.000],
+            [0.000,-0.004],
+            [0.000,0.004]
+          ];
+
+          thinStrokeOffsets.forEach(([sx,sy])=>{
+            const stroke=createColoredCharGeometry(
+              char,
+              `${(x+sx).toFixed(4)} ${(y+sy).toFixed(4)} -0.003`,
+              size,
+              'stroke',
+              frontColor
+            );
+            lineGroup.appendChild(stroke);
+          });
+
+          const front=createColoredCharGeometry(
+            char,
+            `${x.toFixed(4)} ${y.toFixed(4)} 0.002`,
+            size,
+            'front',
+            frontColor
+          );
+          lineGroup.appendChild(front);
+        }
+        cursorX+=width+LETTER_GAP;
+      });
+
+      return lineGroup;
+    }
+
+    function getTermBlocks(item){
+      let terms=[];
+      if(Array.isArray(item.terms)&&item.terms.length){
+        terms=item.terms;
+      }else if(item.displayText){
+        terms=String(item.displayText).split('/').map(v=>v.trim()).filter(Boolean);
+      }
+
+      return terms.slice(0,3).map((term,index)=>({
+        term: cleanText(term),
+        color: TERM_COLORS[index % TERM_COLORS.length],
+        lines: splitTerm(term)
+      })).filter(block=>block.lines.length);
+    }
+
+    function getTermBlockTextSize(blocks){
+      const allLines=blocks.flatMap(block=>block.lines);
+      const longest=allLines.reduce((max,line)=>Math.max(max,line.length),0);
+      const lineCount=allLines.length;
+
+      if(lineCount>=8||longest>=28)return 0.026;
+      if(lineCount>=7||longest>=24)return 0.030;
+      if(lineCount>=6||longest>=21)return 0.034;
+      if(lineCount>=5||longest>=18)return 0.039;
+      if(lineCount>=4||longest>=15)return 0.046;
+      if(lineCount>=3)return 0.055;
+      return 0.068;
+    }
+
+    function makeTextGroup(item){
+      const group=document.createElement('a-entity');
+      const blocks=getTermBlocks(item);
+      if(!blocks.length)return group;
+
+      const size=getTermBlockTextSize(blocks);
+      const innerGap=size*INNER_LINE_GAP_MULTIPLIER;
+      const termGap=size*TERM_GAP_MULTIPLIER;
+
+      const totalHeight=blocks.reduce((sum,block,index)=>{
+        const blockHeight=Math.max(0,block.lines.length-1)*innerGap;
+        const extra=index<blocks.length-1?termGap:0;
+        return sum+blockHeight+extra;
+      },0);
+
+      let y=totalHeight/2;
+
+      group.setAttribute('position','0 0.02 0.06');
+      group.setAttribute('rotation','0 0 0');
+
+      blocks.forEach((block,blockIndex)=>{
+        block.lines.forEach((line,lineIndex)=>{
+          group.appendChild(buildColoredLetterSpacedLine(line,y-(lineIndex*innerGap),size,block.color));
+        });
+
+        const blockHeight=Math.max(0,block.lines.length-1)*innerGap;
+        y-=blockHeight;
+        if(blockIndex<blocks.length-1)y-=termGap;
+      });
+
+      return group;
+    }
+
 
     function buildTargets(){
       if(targetsBuilt)return;
