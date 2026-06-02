@@ -1,379 +1,200 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>1.2 Scan Text Image to Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>1.2 Scan Image to Image</title>
 
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #020617;
-      color: #ffffff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    a-scene {
-      width: 100vw;
-      height: 100vh;
-    }
-
-    .a-enter-vr,
-    .mindar-ui-overlay,
-    .mindar-ui-scanning {
-      display: none !important;
-    }
-
-    .top-ui {
-      position: fixed;
-      z-index: 20;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      pointer-events: none;
-      background: linear-gradient(
-        180deg,
-        rgba(2, 6, 23, 0.75),
-        rgba(2, 6, 23, 0)
-      );
-    }
-
-    .top-ui > * {
-      pointer-events: auto;
-    }
-
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      padding: 8px 13px;
-      border-radius: 999px;
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 800;
-      background: rgba(15, 23, 42, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(12px);
-    }
-
-    .status-pill {
-      min-width: 92px;
-      min-height: 38px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 13px;
-      border-radius: 999px;
-      color: #1e0638;
-      background: rgba(196, 181, 253, 0.96);
-      font-size: 13px;
-      font-weight: 950;
-      letter-spacing: 0.04em;
-      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.26);
-      backdrop-filter: blur(12px);
-    }
-
-    .start-screen {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 22px;
-      text-align: center;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.95), rgba(15, 23, 42, 0.96) 48%, #020617 100%);
-    }
-
-    .start-card {
-      width: min(520px, 100%);
-      padding: 28px 24px;
-      border-radius: 30px;
-      background: rgba(255, 255, 255, 0.10);
-      border: 1px solid rgba(255, 255, 255, 0.20);
-      box-shadow: 0 26px 90px rgba(0, 0, 0, 0.44);
-      backdrop-filter: blur(18px);
-    }
-
-    .badge {
-      display: inline-flex;
-      margin-bottom: 12px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      color: #ddd6fe;
-      background: rgba(196, 181, 253, 0.16);
-      font-size: 13px;
-      font-weight: 950;
-      letter-spacing: 0.08em;
-    }
-
-    .start-card h1 {
-      margin: 0 0 12px;
-      font-size: clamp(28px, 8vw, 42px);
-      line-height: 1.08;
-      font-weight: 950;
-    }
-
-    .start-card p {
-      margin: 0;
-      color: #ede9fe;
-      font-size: 15px;
-      line-height: 1.62;
-    }
-
-    .start-btn {
-      margin-top: 22px;
-      border: 0;
-      border-radius: 20px;
-      padding: 14px 24px;
-      color: #17072c;
-      background: #c4b5fd;
-      font-size: 17px;
-      font-weight: 950;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
-    }
-
-    .start-btn:disabled {
-      opacity: 0.62;
-    }
-
-    .hint {
-      margin-top: 14px;
-      color: #ddd6fe;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .error {
-      display: none;
-      margin-top: 14px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      color: #fecaca;
-      background: rgba(127, 29, 29, 0.42);
-      font-size: 13px;
-      line-height: 1.45;
-    }
+    :root { --line: rgba(255,255,255,.16); --part1: #38bdf8; --yellow: #facc15; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; touch-action: manipulation; }
+    a-scene, a-scene canvas { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 1 !important; background: transparent !important; }
+    video { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; object-fit: cover !important; z-index: 0 !important; background: #000 !important; }
+    .a-enter-vr, .a-enter-ar, .mindar-ui-overlay, .mindar-ui-scanning, .mindar-ui-loading, .mindar-ui-error { display: none !important; }
+    .topbar { position: fixed; z-index: 30; top: 0; left: 0; right: 0; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: linear-gradient(180deg, rgba(2,6,23,.55), rgba(2,6,23,0)); pointer-events: none; }
+    .topbar > * { pointer-events: auto; }
+    .back { display: inline-flex; align-items: center; gap: 6px; color: #fff; text-decoration: none; background: rgba(15,23,42,.62); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-weight: 900; font-size: 14px; backdrop-filter: blur(12px); }
+    .status { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 950; letter-spacing: .04em; color: #02111f; background: rgba(56,189,248,.92); box-shadow: 0 8px 30px rgba(14,165,233,.22); }
+    .status.found { background: rgba(250,204,21,.96); box-shadow: 0 8px 30px rgba(250,204,21,.22); }
+    .start { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 22px; background: radial-gradient(circle at top, #0e7490 0%, #082f49 38%, #020617 72%); text-align: center; }
+    .start-card { width: min(520px, 100%); border: 1px solid rgba(255,255,255,.18); border-radius: 28px; padding: 26px; background: rgba(255,255,255,.10); box-shadow: 0 24px 90px rgba(0,0,0,.5); backdrop-filter: blur(16px); }
+    .start h1 { margin: 0 0 8px; font-size: clamp(26px, 8vw, 38px); line-height: 1.08; font-weight: 950; }
+    .start p { margin: 8px auto 16px; max-width: 420px; line-height: 1.55; color: #dbeafe; font-size: 15px; }
+    .start button { border: 0; border-radius: 18px; background: var(--part1); color: #00111f; font-size: 17px; font-weight: 950; padding: 14px 22px; box-shadow: 0 12px 30px rgba(56,189,248,.28); }
+    .start button:disabled { opacity: .55; }
+    .hint { font-size: 13px; color: #bae6fd; margin-top: 12px; line-height: 1.45; }
+    .error { display: none; margin-top: 12px; color: #fecaca; background: rgba(127,29,29,.32); border: 1px solid rgba(254,202,202,.25); border-radius: 14px; padding: 10px; line-height: 1.45; text-align: left; }
   </style>
 </head>
-
 <body>
-  <div class="top-ui">
-    <a class="back-btn" href="../">← Part 1</a>
-    <div id="status" class="status-pill">Ready</div>
+  <div class="topbar">
+    <a class="back" href="../index.html">← Part 1</a>
+    <div id="status" class="status">Ready</div>
   </div>
 
-  <div id="startScreen" class="start-screen">
+  <div id="start" class="start">
     <div class="start-card">
-      <div class="badge">PART 1.2</div>
-      <h1>สแกนภาพขึ้นภาพ</h1>
-      <p>
-        สแกนภาพข้อความภาษาอังกฤษที่เตรียมไว้ เช่น Keep Quiet
-        แล้วระบบจะแสดงภาพผลลัพธ์บนภาพที่สแกน
-      </p>
-      <button id="startBtn" class="start-btn">Start Camera</button>
-      <div class="hint">Best on mobile Chrome / Safari. Please allow camera permission.</div>
-      <div id="errorBox" class="error"></div>
+      <h1>1.2 Scan Image to Image</h1>
+      <p>Tap Start Camera and scan a prepared text image. A context image will appear in AR.</p>
+      <button id="startBtn" type="button">Start Camera</button>
+      <div class="hint">Best on mobile Chrome. Please allow camera permission.</div>
+      <div id="error" class="error"></div>
     </div>
   </div>
 
-  <a-scene
-    id="scene"
-    mindar-image="
-      imageTargetSrc: ../../assets/targets/part1-2.mind;
-      autoStart: false;
-      uiLoading: yes;
-      uiScanning: no;
-      uiError: no;
-      filterMinCF: 0.0001;
-      filterBeta: 0.001;
-      warmupTolerance: 5;
-      missTolerance: 8
-    "
+  <a-scene id="scene"
+    mindar-image="imageTargetSrc: ../../assets/targets/part1-2.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded
-  >
-    <a-assets id="arAssets"></a-assets>
+    embedded>
+    <a-assets id="assetBox" timeout="20000"></a-assets>
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity light="type: ambient; intensity: 1.25"></a-entity>
+    <a-entity light="type: directional; intensity: 0.8" position="0 1 1"></a-entity>
   </a-scene>
 
   <script>
-    const DATA_URL = "../../assets/data/part1-2.json";
-    const RESULT_IMAGE_BASE = "../../assets/images/part1/1.2/results/";
+    const DATA_URL = '../../assets/data/part1-2.json';
+    const MIND_URL = '../../assets/targets/part1-2.mind';
+    const RESULT_BASE = '../../assets/images/part1/1.2/results/';
 
-    const scene = document.getElementById("scene");
-    const arAssets = document.getElementById("arAssets");
-    const startScreen = document.getElementById("startScreen");
-    const startBtn = document.getElementById("startBtn");
-    const statusEl = document.getElementById("status");
-    const errorBox = document.getElementById("errorBox");
+    const scene = document.getElementById('scene');
+    const assetBox = document.getElementById('assetBox');
+    const startScreen = document.getElementById('start');
+    const startBtn = document.getElementById('startBtn');
+    const errorEl = document.getElementById('error');
+    const statusEl = document.getElementById('status');
 
-    let lessonData = [];
-    let isReady = false;
-    let isStarted = false;
-    let foundCount = 0;
+    let imageData = [];
+    let dataReady = false;
+    let targetsBuilt = false;
+    const foundTargets = new Set();
 
-    function setStatus(text) {
+    function setStatus(text, found = false) {
       statusEl.textContent = text;
+      statusEl.classList.toggle('found', !!found);
     }
 
     function showError(message) {
-      errorBox.style.display = "block";
-      errorBox.textContent = message;
+      errorEl.style.display = 'block';
+      errorEl.textContent = message;
     }
 
-    function clearError() {
-      errorBox.style.display = "none";
-      errorBox.textContent = "";
+    function addImageAsset(item) {
+      const img = document.createElement('img');
+      img.setAttribute('id', `result-${item.index}`);
+      img.setAttribute('src', RESULT_BASE + item.resultImage);
+      img.setAttribute('crossorigin', 'anonymous');
+      assetBox.appendChild(img);
     }
 
-    function getImageAssetId(index) {
-      return "result-image-" + index;
-    }
+    function buildResultImage(item) {
+      const group = document.createElement('a-entity');
+      group.setAttribute('position', '0 0 0.06');
+      group.setAttribute('rotation', '0 0 0');
 
-    function createResultTarget(item) {
-      const targetIndex = Number(item.index);
-      const assetId = getImageAssetId(targetIndex);
+      const shadow = document.createElement('a-plane');
+      shadow.setAttribute('width', '1.10');
+      shadow.setAttribute('height', '0.83');
+      shadow.setAttribute('position', '0.012 -0.012 -0.012');
+      shadow.setAttribute('material', 'color: #020617; opacity: 0.34; transparent: true; side: double');
 
-      const imageAsset = document.createElement("img");
-      imageAsset.id = assetId;
-      imageAsset.src = RESULT_IMAGE_BASE + item.resultImage;
-      imageAsset.crossOrigin = "anonymous";
-      arAssets.appendChild(imageAsset);
+      const image = document.createElement('a-image');
+      image.setAttribute('src', `#result-${item.index}`);
+      image.setAttribute('width', '1.06');
+      image.setAttribute('height', '0.795');
+      image.setAttribute('position', '0 0 0');
+      image.setAttribute('material', 'shader: flat; transparent: true; side: double');
 
-      const targetEntity = document.createElement("a-entity");
-      targetEntity.setAttribute("mindar-image-target", "targetIndex: " + targetIndex);
-
-      const imagePlane = document.createElement("a-plane");
-      imagePlane.setAttribute("src", "#" + assetId);
-      imagePlane.setAttribute("position", "0 0 0.04");
-      imagePlane.setAttribute("rotation", "0 0 0");
-      imagePlane.setAttribute("width", "1.35");
-      imagePlane.setAttribute("height", "0.88");
-      imagePlane.setAttribute("material", "shader: flat; transparent: true; side: double; opacity: 1");
-
-      const backPlate = document.createElement("a-plane");
-      backPlate.setAttribute("position", "0 0 0.02");
-      backPlate.setAttribute("rotation", "0 0 0");
-      backPlate.setAttribute("width", "1.43");
-      backPlate.setAttribute("height", "0.96");
-      backPlate.setAttribute("color", "#020617");
-      backPlate.setAttribute("material", "shader: flat; transparent: true; opacity: 0.30; side: double");
-
-      targetEntity.appendChild(backPlate);
-      targetEntity.appendChild(imagePlane);
-
-      targetEntity.addEventListener("targetFound", () => {
-        foundCount += 1;
-        setStatus("Found");
-        if (navigator.vibrate) navigator.vibrate(35);
-      });
-
-      targetEntity.addEventListener("targetLost", () => {
-        foundCount = Math.max(0, foundCount - 1);
-        if (foundCount === 0) {
-          setStatus("Scanning");
-        }
-      });
-
-      scene.appendChild(targetEntity);
+      group.appendChild(shadow);
+      group.appendChild(image);
+      return group;
     }
 
     function buildTargets() {
-      lessonData.forEach((item) => {
-        if (
-          item &&
-          Number.isInteger(Number(item.index)) &&
-          typeof item.resultImage === "string" &&
-          item.resultImage.trim() !== ""
-        ) {
-          createResultTarget(item);
-        }
+      if (targetsBuilt) return;
+
+      imageData.forEach((item) => {
+        addImageAsset(item);
+        const target = document.createElement('a-entity');
+        target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
+        target.appendChild(buildResultImage(item));
+
+        target.addEventListener('targetFound', () => {
+          foundTargets.add(item.index);
+          setStatus('Found', true);
+          if (navigator.vibrate) navigator.vibrate(35);
+        });
+
+        target.addEventListener('targetLost', () => {
+          foundTargets.delete(item.index);
+          if (foundTargets.size === 0) setStatus('Scanning', false);
+        });
+
+        scene.appendChild(target);
+      });
+
+      targetsBuilt = true;
+    }
+
+    async function loadData() {
+      const response = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error('Cannot load part1-2.json');
+      imageData = await response.json();
+      if (!Array.isArray(imageData) || imageData.length === 0) throw new Error('part1-2.json has no data');
+      buildTargets();
+      dataReady = true;
+    }
+
+    function waitForSceneLoaded() {
+      return new Promise((resolve) => {
+        if (scene.hasLoaded) resolve();
+        else scene.addEventListener('loaded', resolve, { once: true });
       });
     }
 
-    async function loadLessonData() {
-      const response = await fetch(DATA_URL, { cache: "no-store" });
-
-      if (!response.ok) {
-        throw new Error("Cannot load part1-2.json");
-      }
-
-      lessonData = await response.json();
-
-      if (!Array.isArray(lessonData) || lessonData.length === 0) {
-        throw new Error("part1-2.json has no valid data");
-      }
-
-      buildTargets();
-      isReady = true;
-      setStatus("Ready");
+    async function checkMindFile() {
+      const response = await fetch(MIND_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error('Cannot find assets/targets/part1-2.mind');
     }
 
     async function startAR() {
-      if (!isReady) {
-        showError("Data is not ready. Please try again.");
-        return;
-      }
-
-      if (isStarted) return;
-
       try {
-        clearError();
         startBtn.disabled = true;
-        startBtn.textContent = "Opening Camera...";
-
-        await scene.systems["mindar-image-system"].start();
-
-        isStarted = true;
-        startScreen.style.display = "none";
-        setStatus("Scanning");
+        errorEl.style.display = 'none';
+        setStatus('Starting');
+        await checkMindFile();
+        await waitForSceneLoaded();
+        if (!dataReady) await loadData();
+        const mindarSystem = scene.systems['mindar-image-system'];
+        if (!mindarSystem) throw new Error('MindAR system is not ready');
+        await mindarSystem.start();
+        startScreen.style.display = 'none';
+        setStatus('Scanning');
       } catch (error) {
         console.error(error);
+        setStatus('Error');
+        showError(error.message || 'Cannot start AR. Please check camera permission and .mind file.');
         startBtn.disabled = false;
-        startBtn.textContent = "Start Camera";
-        showError("Cannot start camera. Please allow camera permission and check part1-2.mind path.");
       }
     }
 
-    startBtn.addEventListener("click", startAR);
-
-    window.addEventListener("beforeunload", () => {
-      try {
-        if (scene.systems && scene.systems["mindar-image-system"]) {
-          scene.systems["mindar-image-system"].stop();
-        }
-      } catch (error) {
-        console.warn(error);
-      }
+    scene.addEventListener('arReady', () => console.log('[1.2] AR ready'));
+    scene.addEventListener('arError', () => {
+      setStatus('Camera Error');
+      showError('Camera access failed. Please allow camera permission and reload this page.');
     });
-
-    loadLessonData().catch((error) => {
+    startBtn.addEventListener('click', startAR);
+    loadData().catch((error) => {
       console.error(error);
-      setStatus("Error");
-      showError("Cannot load 1.2 data. Please check assets/data/part1-2.json and result images.");
+      setStatus('Data Error');
+      showError(error.message || 'Cannot load AR data.');
     });
   </script>
 </body>
