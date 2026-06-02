@@ -1,113 +1,50 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>2.1 Listen & Ask</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
-
-  <style>
-    :root{
-      --part2:#ffd60a;
-      --part2-dark:#3b2f00;
-      --line:rgba(255,255,255,.16);
-      --panel:rgba(2,6,23,.82);
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>2.1 Listen & Ask</title>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
+<style>
+    :root{--theme:#ffd60a;--shadow:#3b2f00;--line:rgba(255,255,255,.16);--panel:rgba(2,6,23,.82)}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{
-      margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      touch-action:manipulation;
-    }
-    a-scene,a-scene canvas{
-      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;
-      z-index:1!important;background:transparent!important;
-    }
-    video{
-      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;
-      object-fit:cover!important;z-index:0!important;background:#000!important;
-    }
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation}
+    a-scene,a-scene canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:1!important;background:transparent!important}
+    video{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:0!important;background:#000!important}
     .a-enter-vr,.a-enter-ar,.mindar-ui-overlay,.mindar-ui-scanning,.mindar-ui-loading,.mindar-ui-error{display:none!important}
-
-    .topbar{
-      position:fixed;z-index:30;top:0;left:0;right:0;
-      padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));
-      pointer-events:none;
-    }
+    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));pointer-events:none}
     .topbar>*{pointer-events:auto}
-    .back{
-      display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;
-      background:rgba(15,23,42,.62);border:1px solid var(--line);border-radius:999px;
-      padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px);
-    }
-    .status{
-      max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;
-      padding:8px 14px;font-size:12px;font-weight:950;letter-spacing:.04em;color:#1c1500;
-      background:rgba(255,214,10,.94);box-shadow:0 8px 30px rgba(255,214,10,.22);
-    }
+    .back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(15,23,42,.62);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px)}
+    .status{max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:950;letter-spacing:.04em;color:#1c1500;background:var(--theme);box-shadow:0 8px 30px rgba(255,214,10,.18)}
     .status.found{background:rgba(6,214,160,.96);color:#00170f;box-shadow:0 8px 30px rgba(6,214,160,.22)}
-
-    .question-panel{
-      position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
-      z-index:35;display:none;border:1px solid rgba(255,214,10,.30);border-radius:22px;
-      padding:12px 14px;background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.42);
-      backdrop-filter:blur(16px);
-    }
+    .start{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,rgba(255,255,255,.16) 0%,var(--shadow) 36%,#020617 72%);text-align:center}
+    .start-card{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
+    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#f8fafc;font-size:15px}
+    .start button{border:0;border-radius:18px;background:var(--theme);color:#1c1500;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(255,214,10,.24)}
+    .start button:disabled{opacity:.55}
+    .hint{font-size:13px;color:#e0f2fe;margin-top:12px;line-height:1.45}
+    .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
+    
+    .question-panel{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:35;display:none;border:1px solid rgba(255,214,10,.30);border-radius:22px;padding:12px 14px;background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.42);backdrop-filter:blur(16px)}
     .question-panel.show{display:block}
     .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
-    .panel-label{
-      color:var(--part2);font-size:12px;line-height:1;letter-spacing:.08em;font-weight:950;text-transform:uppercase;
-    }
-    .listen-btn{
-      border:0;border-radius:999px;padding:9px 13px;background:var(--part2);color:#1c1500;
-      font-size:13px;font-weight:950;box-shadow:0 10px 24px rgba(255,214,10,.18);
-    }
+    .panel-label{color:var(--theme);font-size:12px;line-height:1;letter-spacing:.08em;font-weight:950;text-transform:uppercase}
+    .listen-btn{border:0;border-radius:999px;padding:9px 13px;background:var(--theme);color:#1c1500;font-size:13px;font-weight:950;box-shadow:0 10px 24px rgba(255,214,10,.18)}
     .listen-btn:active{transform:scale(.96)}
     .question-list{margin:0;padding-left:20px;display:grid;gap:6px}
     .question-list li{color:#f8fafc;font-size:clamp(14px,3.7vw,17px);line-height:1.38;font-weight:800}
-
-    .start{
-      position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;
-      background:radial-gradient(circle at top,rgba(255,214,10,.34) 0%,#3b2f00 36%,#020617 72%);
-      text-align:center;
-    }
-    .start-card{
-      width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;
-      background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px);
-    }
-    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
-    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#fef3c7;font-size:15px}
-    .start button{
-      border:0;border-radius:18px;background:var(--part2);color:#1c1500;font-size:17px;font-weight:950;
-      padding:14px 22px;box-shadow:0 12px 30px rgba(255,214,10,.26);
-    }
-    .start button:disabled{opacity:.55}
-    .hint{font-size:13px;color:#fde68a;margin-top:12px;line-height:1.45}
-    .error{
-      display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);
-      border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left;
-    }
-  </style>
+</style>
 </head>
-
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Part 2</a>
     <div id="status" class="status">Ready</div>
   </div>
 
-  <div id="questionPanel" class="question-panel">
-    <div class="panel-head">
-      <div class="panel-label">Think about these questions</div>
-      <button id="listenBtn" class="listen-btn" type="button">Listen</button>
-    </div>
-    <ol id="questionList" class="question-list"></ol>
-  </div>
+  <div id="questionPanel" class="question-panel"><div class="panel-head"><div class="panel-label">Think about these questions</div><button id="listenBtn" class="listen-btn" type="button">Listen</button></div><ol id="questionList" class="question-list"></ol></div>
 
   <div id="start" class="start">
     <div class="start-card">
@@ -126,8 +63,7 @@
     renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded
-  >
+    embedded>
     <a-assets timeout="15000">
       <a-asset-item id="fontBold" src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"></a-asset-item>
     </a-assets>
@@ -136,174 +72,167 @@
     <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
   </a-scene>
 
-  <script>
-    const DATA_URL = '../../assets/data/part2-1.json';
-    const MIND_URL = '../../assets/targets/part2-1.mind';
+<script>
+    const TEXT_COLOR='#ffd60a';
+    const TEXT_SHADOW='#3b2f00';
+    const TEXT_STROKE='#1c1500';
+    const LETTER_GAP=0.010;
 
-    const scene = document.getElementById('scene');
-    const startScreen = document.getElementById('start');
-    const startBtn = document.getElementById('startBtn');
-    const errorEl = document.getElementById('error');
-    const statusEl = document.getElementById('status');
-    const questionPanel = document.getElementById('questionPanel');
-    const questionList = document.getElementById('questionList');
-    const listenBtn = document.getElementById('listenBtn');
+    const DATA_URL='../../assets/data/part2-1.json';
+    const MIND_URL='../../assets/targets/part2-1.mind';
 
-    const PART2_COLOR = '#ffd60a';
-    const PART2_SHADOW = '#3b2f00';
+    const scene=document.getElementById('scene');
+    const startScreen=document.getElementById('start');
+    const startBtn=document.getElementById('startBtn');
+    const errorEl=document.getElementById('error');
+    const statusEl=document.getElementById('status');
 
-    let vocabData = [];
-    let dataReady = false;
-    let targetsBuilt = false;
-    let currentStatement = '';
-    const foundTargets = new Set();
+    let vocabData=[];
+    let dataReady=false;
+    let targetsBuilt=false;
+    const foundTargets=new Set();
 
-    function setStatus(text, found = false) {
-      statusEl.textContent = text;
-      statusEl.classList.toggle('found', !!found);
+    function setStatus(text,found=false){statusEl.textContent=text;statusEl.classList.toggle('found',!!found)}
+    function showError(message){errorEl.style.display='block';errorEl.textContent=message}
+
+    async function loadData(){
+      const response=await fetch(DATA_URL,{cache:'no-store'});
+      if(!response.ok)throw new Error('Cannot load data file');
+      vocabData=await response.json();
+      if(!Array.isArray(vocabData)||vocabData.length===0)throw new Error('Data file has no data');
+      buildTargets();
+      dataReady=true;
     }
 
-    function showError(message) {
-      errorEl.style.display = 'block';
-      errorEl.textContent = message;
+    function waitForSceneLoaded(){
+      return new Promise(resolve=>{if(scene.hasLoaded)resolve();else scene.addEventListener('loaded',resolve,{once:true})});
     }
 
-    function cleanText(value) {
-      return String(value || '').replace(/;/g, ',').replace(/\s+/g, ' ').trim();
+    async function checkMindFile(){
+      const response=await fetch(MIND_URL,{cache:'no-store'});
+      if(!response.ok)throw new Error('Cannot find .mind file');
     }
 
-    function showPanel(item) {
-      currentStatement = cleanText(item.statement);
-      questionList.innerHTML = '';
-
-      const questions = Array.isArray(item.questions) ? item.questions.filter(Boolean) : [];
-      questions.forEach((q) => {
-        const li = document.createElement('li');
-        li.textContent = q;
-        questionList.appendChild(li);
-      });
-
-      questionPanel.classList.add('show');
+    async function startAR(){
+      try{
+        startBtn.disabled=true;
+        errorEl.style.display='none';
+        setStatus('Starting');
+        await checkMindFile();
+        await waitForSceneLoaded();
+        if(!dataReady)await loadData();
+        const mindarSystem=scene.systems['mindar-image-system'];
+        if(!mindarSystem)throw new Error('MindAR system is not ready');
+        await mindarSystem.start();
+        startScreen.style.display='none';
+        setStatus('Scanning');
+      }catch(error){
+        console.error(error);
+        setStatus('Error');
+        showError(error.message||'Cannot start AR. Please check camera permission and .mind file.');
+        startBtn.disabled=false;
+      }
     }
 
-    function hidePanel() {
-      currentStatement = '';
-      questionPanel.classList.remove('show');
-      questionList.innerHTML = '';
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    scene.addEventListener('arReady',()=>console.log('[2.1] AR ready'));
+    scene.addEventListener('arError',()=>{setStatus('Camera Error');showError('Camera access failed. Please allow camera permission and reload this page.')});
+    startBtn.addEventListener('click',startAR);
+    loadData().catch(error=>{console.error(error);setStatus('Data Error');showError(error.message||'Cannot load AR data.')});
+
+    function cleanText(value){return String(value||'').replace(/;/g,',').replace(/\s+/g,' ').trim()}
+
+    function getCharWidth(char,size){
+      if(char===' ')return size*0.48;
+      if('ilI.,:;!|'.includes(char))return size*0.34;
+      if('mwMW'.includes(char))return size*0.92;
+      if('fjrt()[]'.includes(char))return size*0.48;
+      if('ABCDEFGHKNOPQRSTUVWXYZ'.includes(char))return size*0.72;
+      return size*0.62;
     }
 
-    function splitStatementLines(statement) {
-      const text = cleanText(statement);
-      if (!text) return [];
-
-      const maxLen = 18;
-      const words = text.split(' ');
-      const lines = [];
-      let line = '';
-
-      words.forEach((word) => {
-        const candidate = line ? `${line} ${word}` : word;
-        if (candidate.length > maxLen && line) {
-          lines.push(line);
-          line = word;
-        } else {
-          line = candidate;
-        }
-      });
-
-      if (line) lines.push(line);
-      return lines.slice(0, 4);
-    }
-
-    function getTextSize(lines) {
-      const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
-      if (lines.length >= 4 || longest >= 22) return 0.044;
-      if (lines.length >= 3 || longest >= 18) return 0.052;
-      if (lines.length >= 2 || longest >= 14) return 0.062;
-      return 0.074;
-    }
-
-    function centerTextMesh(entity) {
-      const applyCenter = () => {
-        let didCenter = false;
-
-        entity.object3D.traverse((child) => {
-          if (!child.isMesh || !child.geometry) return;
-          if (child.geometry.userData && child.geometry.userData.centeredX) return;
-
+    function centerTextMesh(entity){
+      const applyCenter=()=>{
+        let didCenter=false;
+        entity.object3D.traverse(child=>{
+          if(!child.isMesh||!child.geometry)return;
+          if(child.geometry.userData&&child.geometry.userData.centeredX)return;
           child.geometry.computeBoundingBox();
-          const box = child.geometry.boundingBox;
-          if (!box) return;
-
-          const centerX = (box.min.x + box.max.x) / 2;
-          child.geometry.translate(-centerX, 0, 0);
+          const box=child.geometry.boundingBox;
+          if(!box)return;
+          const centerX=(box.min.x+box.max.x)/2;
+          child.geometry.translate(-centerX,0,0);
           child.geometry.computeBoundingBox();
-
-          child.geometry.userData = child.geometry.userData || {};
-          child.geometry.userData.centeredX = true;
-          didCenter = true;
+          child.geometry.userData=child.geometry.userData||{};
+          child.geometry.userData.centeredX=true;
+          didCenter=true;
         });
-
         return didCenter;
       };
-
-      const tryCenter = (attempt = 0) => {
-        if (applyCenter()) return;
-        if (attempt > 30) return;
-        requestAnimationFrame(() => tryCenter(attempt + 1));
+      const tryCenter=(attempt=0)=>{
+        if(applyCenter())return;
+        if(attempt>30)return;
+        requestAnimationFrame(()=>tryCenter(attempt+1));
       };
-
-      entity.addEventListener('object3dset', () => tryCenter());
-      entity.addEventListener('componentinitialized', (event) => {
-        if (event.detail && event.detail.name === 'text-geometry') tryCenter();
+      entity.addEventListener('object3dset',()=>tryCenter());
+      entity.addEventListener('componentinitialized',event=>{
+        if(event.detail&&event.detail.name==='text-geometry')tryCenter();
       });
-
       tryCenter();
-      setTimeout(() => tryCenter(), 100);
-      setTimeout(() => tryCenter(), 300);
-      setTimeout(() => tryCenter(), 700);
-      setTimeout(() => tryCenter(), 1200);
+      setTimeout(()=>tryCenter(),100);
+      setTimeout(()=>tryCenter(),300);
+      setTimeout(()=>tryCenter(),700);
+      setTimeout(()=>tryCenter(),1200);
     }
 
-    function createTextGeometry(value, position, size, isShadow = false) {
-      const text = document.createElement('a-entity');
-      text.setAttribute('position', position);
-      text.setAttribute('rotation', '0 0 0');
-
-      text.setAttribute('text-geometry', {
-        value: cleanText(value),
-        font: '#fontBold',
-        align: 'center',
-        size,
-        height: 0.018,
-        curveSegments: 5,
-        bevelEnabled: true,
-        bevelSize: 0.0025,
-        bevelThickness: 0.0025
+    function createCharGeometry(char,position,size,role='front'){
+      const text=document.createElement('a-entity');
+      text.setAttribute('position',position);
+      text.setAttribute('rotation','0 0 0');
+      text.setAttribute('text-geometry',{
+        value:char,
+        font:'#fontBold',
+        align:'center',
+        size:size,
+        height:0.018,
+        curveSegments:5,
+        bevelEnabled:true,
+        bevelSize:0.0025,
+        bevelThickness:0.0025
       });
 
-      if (isShadow) {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART2_SHADOW,
-          emissive: PART2_SHADOW,
-          emissiveIntensity: 0.18,
-          opacity: 0.72,
-          transparent: true,
-          metalness: 0,
-          roughness: 0.7,
-          side: 'double'
+      if(role==='stroke'){
+        text.setAttribute('material',{
+          shader:'standard',
+          color:TEXT_STROKE,
+          emissive:TEXT_STROKE,
+          emissiveIntensity:0.10,
+          opacity:0.98,
+          transparent:true,
+          metalness:0,
+          roughness:0.75,
+          side:'double'
         });
-      } else {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART2_COLOR,
-          emissive: PART2_COLOR,
-          emissiveIntensity: 0.55,
-          metalness: 0.02,
-          roughness: 0.25,
-          side: 'double'
+      }else if(role==='shadow'){
+        text.setAttribute('material',{
+          shader:'standard',
+          color:TEXT_SHADOW,
+          emissive:TEXT_SHADOW,
+          emissiveIntensity:0.16,
+          opacity:0.70,
+          transparent:true,
+          metalness:0,
+          roughness:0.7,
+          side:'double'
+        });
+      }else{
+        text.setAttribute('material',{
+          shader:'standard',
+          color:TEXT_COLOR,
+          emissive:TEXT_COLOR,
+          emissiveIntensity:0.55,
+          metalness:0.02,
+          roughness:0.25,
+          side:'double'
         });
       }
 
@@ -311,139 +240,171 @@
       return text;
     }
 
-    function buildTextGroup(item) {
-      const group = document.createElement('a-entity');
-      const lines = splitStatementLines(item.statement);
-      if (!lines.length) return group;
+    function buildLetterSpacedLine(line,y,size){
+      const lineGroup=document.createElement('a-entity');
+      const chars=Array.from(cleanText(line));
+      const widths=chars.map(char=>getCharWidth(char,size));
+      const totalWidth=widths.reduce((sum,width)=>sum+width,0)+Math.max(0,chars.length-1)*LETTER_GAP;
+      let cursorX=-totalWidth/2;
 
-      const size = getTextSize(lines);
-      const gap = size * 1.45;
-      const startY = ((lines.length - 1) * gap) / 2;
+      chars.forEach((char,index)=>{
+        const width=widths[index];
+        if(char!==' '){
+          const x=cursorX+width/2;
 
-      group.setAttribute('position', '0 0.02 0.06');
-      group.setAttribute('rotation', '0 0 0');
+          const shadow=createCharGeometry(
+            char,
+            `${(x+0.007).toFixed(4)} ${(y-0.007).toFixed(4)} -0.012`,
+            size,
+            'shadow'
+          );
+          lineGroup.appendChild(shadow);
 
-      lines.forEach((line, index) => {
-        const y = startY - (index * gap);
-        group.appendChild(createTextGeometry(line, `0.008 ${y - 0.008} -0.010`, size, true));
-        group.appendChild(createTextGeometry(line, `0 ${y} 0`, size, false));
+          const thinStrokeOffsets=[
+            [-0.004,0.000],
+            [0.004,0.000],
+            [0.000,-0.004],
+            [0.000,0.004]
+          ];
+
+          thinStrokeOffsets.forEach(([sx,sy])=>{
+            const stroke=createCharGeometry(
+              char,
+              `${(x+sx).toFixed(4)} ${(y+sy).toFixed(4)} -0.003`,
+              size,
+              'stroke'
+            );
+            lineGroup.appendChild(stroke);
+          });
+
+          const front=createCharGeometry(
+            char,
+            `${x.toFixed(4)} ${y.toFixed(4)} 0.002`,
+            size,
+            'front'
+          );
+          lineGroup.appendChild(front);
+        }
+        cursorX+=width+LETTER_GAP;
+      });
+
+      return lineGroup;
+    }
+
+    function buildTextGroupFromLines(lines,size,gapMultiplier=1.55){
+      const group=document.createElement('a-entity');
+      if(!lines.length)return group;
+
+      const gap=size*gapMultiplier;
+      const startY=((lines.length-1)*gap)/2;
+
+      group.setAttribute('position','0 0.02 0.06');
+      group.setAttribute('rotation','0 0 0');
+
+      lines.forEach((line,index)=>{
+        const y=startY-(index*gap);
+        group.appendChild(buildLetterSpacedLine(line,y,size));
       });
 
       return group;
     }
 
-    function buildTargets() {
-      if (targetsBuilt) return;
+    const questionPanel=document.getElementById('questionPanel');
+    const questionList=document.getElementById('questionList');
+    const listenBtn=document.getElementById('listenBtn');
+    let currentStatement='';
 
-      vocabData.forEach((item) => {
-        const target = document.createElement('a-entity');
-        target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
-        target.appendChild(buildTextGroup(item));
+    function showPanel(item){
+      currentStatement=cleanText(item.statement);
+      questionList.innerHTML='';
+      const questions=Array.isArray(item.questions)?item.questions.filter(Boolean):[];
+      questions.forEach(q=>{
+        const li=document.createElement('li');
+        li.textContent=q;
+        questionList.appendChild(li);
+      });
+      questionPanel.classList.add('show');
+    }
 
-        target.addEventListener('targetFound', () => {
+    function hidePanel(){
+      currentStatement='';
+      questionPanel.classList.remove('show');
+      questionList.innerHTML='';
+      if('speechSynthesis' in window)window.speechSynthesis.cancel();
+    }
+
+    function splitStatementLines(statement){
+      const text=cleanText(statement);
+      if(!text)return[];
+      const maxLen=18;
+      const words=text.split(' ');
+      const lines=[];
+      let line='';
+      words.forEach(word=>{
+        const candidate=line?`${line} ${word}`:word;
+        if(candidate.length>maxLen&&line){lines.push(line);line=word}else{line=candidate}
+      });
+      if(line)lines.push(line);
+      return lines.slice(0,4);
+    }
+
+    function getStatementTextSize(lines){
+      const longest=lines.reduce((max,line)=>Math.max(max,line.length),0);
+      if(lines.length>=4||longest>=22)return 0.044;
+      if(lines.length>=3||longest>=18)return 0.052;
+      if(lines.length>=2||longest>=14)return 0.062;
+      return 0.074;
+    }
+
+    function makeTextGroup(item){
+      const lines=splitStatementLines(item.statement);
+      return buildTextGroupFromLines(lines,getStatementTextSize(lines),1.45);
+    }
+
+    function buildTargets(){
+      if(targetsBuilt)return;
+      vocabData.forEach(item=>{
+        const target=document.createElement('a-entity');
+        target.setAttribute('mindar-image-target',`targetIndex: ${item.index}`);
+
+        target.addEventListener('targetFound',()=>{
           foundTargets.add(item.index);
-          setStatus('Found', true);
+          setStatus('Found',true);
+          if(!target.__textGroup){
+            target.__textGroup=makeTextGroup(item);
+            target.appendChild(target.__textGroup);
+          }
           showPanel(item);
-          if (navigator.vibrate) navigator.vibrate(35);
+          if(navigator.vibrate)navigator.vibrate(35);
         });
 
-        target.addEventListener('targetLost', () => {
+        target.addEventListener('targetLost',()=>{
           foundTargets.delete(item.index);
-          if (foundTargets.size === 0) {
-            setStatus('Scanning', false);
-            hidePanel();
+          if(target.__textGroup){
+            target.removeChild(target.__textGroup);
+            target.__textGroup=null;
           }
+          if(foundTargets.size===0){setStatus('Scanning',false);hidePanel()}
         });
 
         scene.appendChild(target);
       });
-
-      targetsBuilt = true;
+      targetsBuilt=true;
     }
 
-    async function loadData() {
-      const response = await fetch(DATA_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot load part2-1.json');
-
-      vocabData = await response.json();
-      if (!Array.isArray(vocabData) || vocabData.length === 0) {
-        throw new Error('part2-1.json has no data');
-      }
-
-      buildTargets();
-      dataReady = true;
-    }
-
-    function waitForSceneLoaded() {
-      return new Promise((resolve) => {
-        if (scene.hasLoaded) resolve();
-        else scene.addEventListener('loaded', resolve, { once: true });
-      });
-    }
-
-    async function checkMindFile() {
-      const response = await fetch(MIND_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot find assets/targets/part2-1.mind');
-    }
-
-    async function startAR() {
-      try {
-        startBtn.disabled = true;
-        errorEl.style.display = 'none';
-        setStatus('Starting');
-
-        await checkMindFile();
-        await waitForSceneLoaded();
-        if (!dataReady) await loadData();
-
-        const mindarSystem = scene.systems['mindar-image-system'];
-        if (!mindarSystem) throw new Error('MindAR system is not ready');
-
-        await mindarSystem.start();
-        startScreen.style.display = 'none';
-        setStatus('Scanning');
-      } catch (error) {
-        console.error(error);
-        setStatus('Error');
-        showError(error.message || 'Cannot start AR. Please check camera permission and .mind file.');
-        startBtn.disabled = false;
-      }
-    }
-
-    function speakCurrentStatement() {
-      const text = cleanText(currentStatement);
-      if (!text) return;
-
-      if (!('speechSynthesis' in window)) {
-        alert('Speech is not supported on this browser.');
-        return;
-      }
-
+    function speakCurrentStatement(){
+      const text=cleanText(currentStatement);
+      if(!text)return;
+      if(!('speechSynthesis' in window)){alert('Speech is not supported on this browser.');return}
       window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.86;
-      utterance.pitch = 1.0;
-
+      const utterance=new SpeechSynthesisUtterance(text);
+      utterance.lang='en-US';
+      utterance.rate=0.86;
+      utterance.pitch=1.0;
       window.speechSynthesis.speak(utterance);
     }
 
-    scene.addEventListener('arReady', () => console.log('[2.1] AR ready'));
-
-    scene.addEventListener('arError', () => {
-      setStatus('Camera Error');
-      showError('Camera access failed. Please allow camera permission and reload this page.');
-    });
-
-    startBtn.addEventListener('click', startAR);
-    listenBtn.addEventListener('click', speakCurrentStatement);
-
-    loadData().catch((error) => {
-      console.error(error);
-      setStatus('Data Error');
-      showError(error.message || 'Cannot load AR data.');
-    });
-  </script>
+    listenBtn.addEventListener('click',speakCurrentStatement);
+</script>
 </body>
 </html>
