@@ -103,6 +103,16 @@
     let sourceData=null;
     let items=[];
     let wheelItems=[];
+    const WHEEL_LABELS=[
+      'Dictionary',
+      'Grammar',
+      'Real\nSigns',
+      'Official\nSites',
+      'Examples',
+      'Videos',
+      'People',
+      'AI\nTools'
+    ];
     let dataReady=false;
     let targetsBuilt=false;
     let activeItem=null;
@@ -269,9 +279,37 @@
       return {texture,aspect:canvas.width/canvas.height};
     }
 
+    function drawWheelLabel(ctx,label,x,y,angle,fontSize){
+      const lines=String(label).split('\n');
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(angle);
+
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.lineJoin='round';
+
+      const lineHeight=fontSize*0.92;
+      const startY=-((lines.length-1)*lineHeight)/2;
+
+      lines.forEach((line,index)=>{
+        const yy=startY+(index*lineHeight);
+
+        ctx.lineWidth=Math.max(7,fontSize*0.16);
+        ctx.strokeStyle='rgba(2,6,23,.88)';
+        ctx.strokeText(line,0,yy);
+
+        ctx.fillStyle='#ffffff';
+        ctx.fillText(line,0,yy);
+      });
+
+      ctx.restore();
+    }
+
     function makeWheelTexture(){
       const canvas=document.createElement('canvas');
-      const size=1024;
+      const size=1400;
       const ctx=canvas.getContext('2d');
       canvas.width=size;
       canvas.height=size;
@@ -280,7 +318,7 @@
       const cx=size/2;
       const cy=size/2;
       const r=size*0.46;
-      const hole=size*0.16;
+      const hole=size*0.15;
       const segment=(Math.PI*2)/colors.length;
 
       ctx.clearRect(0,0,size,size);
@@ -288,30 +326,55 @@
       colors.forEach((color,index)=>{
         const start=-Math.PI/2+index*segment;
         const end=start+segment;
+
         ctx.beginPath();
         ctx.moveTo(cx,cy);
         ctx.arc(cx,cy,r,start,end);
         ctx.closePath();
         ctx.fillStyle=color;
         ctx.fill();
-        ctx.lineWidth=8;
-        ctx.strokeStyle='rgba(255,255,255,.72)';
+
+        ctx.lineWidth=9;
+        ctx.strokeStyle='rgba(255,255,255,.74)';
         ctx.stroke();
+
+        // label placed in the middle of each segment
+        const mid=start+(segment/2);
+        const labelRadius=size*0.315;
+        const x=cx+Math.cos(mid)*labelRadius;
+        const y=cy+Math.sin(mid)*labelRadius;
+
+        // rotate text so it follows the segment but remains readable enough
+        let labelAngle=mid+Math.PI/2;
+        if(labelAngle>Math.PI/2 && labelAngle<Math.PI*1.5){
+          labelAngle+=Math.PI;
+        }
+
+        drawWheelLabel(ctx,WHEEL_LABELS[index]||String(index+1),x,y,labelAngle,54);
       });
 
       ctx.beginPath();
       ctx.arc(cx,cy,r+8,0,Math.PI*2);
-      ctx.lineWidth=18;
-      ctx.strokeStyle='rgba(255,255,255,.92)';
+      ctx.lineWidth=22;
+      ctx.strokeStyle='rgba(255,255,255,.94)';
       ctx.stroke();
 
       ctx.beginPath();
       ctx.arc(cx,cy,hole,0,Math.PI*2);
       ctx.fillStyle='rgba(2,6,23,.92)';
       ctx.fill();
-      ctx.lineWidth=8;
-      ctx.strokeStyle='rgba(255,255,255,.55)';
+      ctx.lineWidth=10;
+      ctx.strokeStyle='rgba(255,255,255,.66)';
       ctx.stroke();
+
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.font='900 54px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.lineWidth=8;
+      ctx.strokeStyle='rgba(0,0,0,.72)';
+      ctx.strokeText('SPIN',cx,cy);
+      ctx.fillStyle='#ffffff';
+      ctx.fillText('SPIN',cx,cy);
 
       const texture=new THREE.CanvasTexture(canvas);
       texture.needsUpdate=true;
@@ -414,7 +477,7 @@
       group.setAttribute('position','0 -0.04 0.08');
       group.setAttribute('rotation','0 0 0');
 
-      const wheelSize=0.48;
+      const wheelSize=0.52;
       const questionWidth=0.92;
       const questionPlane=makeQuestionPlane(item,questionWidth);
       const questionY=(wheelSize/2)+0.10+(questionPlane.__questionHeight/2);
