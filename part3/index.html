@@ -598,10 +598,11 @@
       const selectedIndex=Math.floor(Math.random()*wheelItems.length);
       const segment=360/wheelItems.length;
 
-      // The wheel texture is drawn with item 0 centered at the top pointer.
-      // Rotating by -index*segment puts the selected label under the pointer,
-      // so the label on the wheel matches the selected source below.
-      const targetAngle=(360-(selectedIndex*segment))%360;
+      // Fix wheel/result alignment:
+      // In the AR plane, the visible top pointer is offset by 2 wheel segments.
+      // Add WHEEL_POINTER_OFFSET so the label under the pointer matches wheelItems[selectedIndex].
+      const WHEEL_POINTER_OFFSET=2;
+      const targetAngle=(360-(((selectedIndex+WHEEL_POINTER_OFFSET)%wheelItems.length)*segment))%360;
       const extraTurns=360*(4+Math.floor(Math.random()*3));
       wheelRotation+=extraTurns+targetAngle-(wheelRotation%360);
 
