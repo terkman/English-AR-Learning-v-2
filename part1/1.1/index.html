@@ -4,182 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>1.1 Scan Image to Text</title>
-
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://unpkg.com/aframe-text-geometry-component@0.5.2/dist/aframe-text-geometry-component.min.js"></script>
-
   <style>
-    :root {
-      --line: rgba(255,255,255,.16);
-      --part1: #38bdf8;
-      --part1-dark: #082f49;
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      touch-action: manipulation;
-    }
-
-    a-scene, a-scene canvas {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 1 !important;
-      background: transparent !important;
-    }
-
-    video {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-      z-index: 0 !important;
-      background: #000 !important;
-    }
-
-    .a-enter-vr,
-    .a-enter-ar,
-    .mindar-ui-overlay,
-    .mindar-ui-scanning,
-    .mindar-ui-loading,
-    .mindar-ui-error {
-      display: none !important;
-    }
-
-    .topbar {
-      position: fixed;
-      z-index: 30;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(2,6,23,.55), rgba(2,6,23,0));
-      pointer-events: none;
-    }
-
-    .topbar > * { pointer-events: auto; }
-
-    .back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #fff;
-      text-decoration: none;
-      background: rgba(15,23,42,.62);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-weight: 900;
-      font-size: 14px;
-      backdrop-filter: blur(12px);
-    }
-
-    .status {
-      max-width: 48vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing: .04em;
-      color: #02111f;
-      background: rgba(56,189,248,.92);
-      box-shadow: 0 8px 30px rgba(14,165,233,.22);
-    }
-
-    .status.found {
-      background: rgba(250,204,21,.96);
-      box-shadow: 0 8px 30px rgba(250,204,21,.22);
-    }
-
-    .start {
-      position: fixed;
-      inset: 0;
-      z-index: 80;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 22px;
-      background: radial-gradient(circle at top, #0e7490 0%, #082f49 38%, #020617 72%);
-      text-align: center;
-    }
-
-    .start-card {
-      width: min(520px, 100%);
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 28px;
-      padding: 26px;
-      background: rgba(255,255,255,.10);
-      box-shadow: 0 24px 90px rgba(0,0,0,.5);
-      backdrop-filter: blur(16px);
-    }
-
-    .start h1 {
-      margin: 0 0 8px;
-      font-size: clamp(26px, 8vw, 38px);
-      line-height: 1.08;
-      font-weight: 950;
-    }
-
-    .start p {
-      margin: 8px auto 16px;
-      max-width: 420px;
-      line-height: 1.55;
-      color: #dbeafe;
-      font-size: 15px;
-    }
-
-    .start button {
-      border: 0;
-      border-radius: 18px;
-      background: var(--part1);
-      color: #00111f;
-      font-size: 17px;
-      font-weight: 950;
-      padding: 14px 22px;
-      box-shadow: 0 12px 30px rgba(56,189,248,.28);
-    }
-
-    .start button:disabled { opacity: .55; }
-
-    .hint {
-      font-size: 13px;
-      color: #bae6fd;
-      margin-top: 12px;
-      line-height: 1.45;
-    }
-
-    .error {
-      display: none;
-      margin-top: 12px;
-      color: #fecaca;
-      background: rgba(127,29,29,.32);
-      border: 1px solid rgba(254,202,202,.25);
-      border-radius: 14px;
-      padding: 10px;
-      line-height: 1.45;
-      text-align: left;
-    }
-  </style>
+    :root{--line:rgba(255,255,255,.16);--part1:#38bdf8;--dark:#082f49;--found:#06d6a0}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation}
+    a-scene,a-scene canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:1!important;background:transparent!important}
+    video{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:0!important;background:#000!important}
+    .a-enter-vr,.a-enter-ar,.mindar-ui-overlay,.mindar-ui-scanning,.mindar-ui-loading,.mindar-ui-error{display:none!important}
+    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));pointer-events:none}
+    .topbar>*{pointer-events:auto}
+    .back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(15,23,42,.62);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px)}
+    .status{max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:950;letter-spacing:.04em;color:#02111f;background:rgba(56,189,248,.92);box-shadow:0 8px 30px rgba(14,165,233,.22)}
+    .status.found{background:rgba(6,214,160,.96);box-shadow:0 8px 30px rgba(6,214,160,.22)}
+    .start{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,#0e7490 0%,#082f49 38%,#020617 72%);text-align:center}
+    .start-card{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
+    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#dbeafe;font-size:15px}
+    .start button{border:0;border-radius:18px;background:var(--part1);color:#00111f;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(56,189,248,.28)}
+    .start button:disabled{opacity:.55}.hint{font-size:13px;color:#bae6fd;margin-top:12px;line-height:1.45}
+    .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
+</style>
 </head>
-
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Part 1</a>
@@ -189,9 +36,9 @@
   <div id="start" class="start">
     <div class="start-card">
       <h1>1.1 Scan Image to Text</h1>
-      <p>Tap Start Camera and scan a target image. English words will appear as 3D AR text.</p>
+      <p>iOS optimized version. Scan a target image and English words will appear as light AR text.</p>
       <button id="startBtn" type="button">Start Camera</button>
-      <div class="hint">Best on mobile Chrome. Please allow camera permission.</div>
+      <div class="hint">iPhone/iPad: open in Safari if Messenger browser crashes.</div>
       <div id="error" class="error"></div>
     </div>
   </div>
@@ -200,360 +47,211 @@
     id="scene"
     mindar-image="imageTargetSrc: ../../assets/targets/part1-1.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01"
     color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
+    renderer="colorManagement: true; physicallyCorrectLights: false; antialias: true; alpha: true; precision: mediump"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded
-  >
-    <a-assets timeout="15000">
-      <a-asset-item id="fontBold" src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/fonts/helvetiker_bold.typeface.json"></a-asset-item>
-    </a-assets>
-
+    embedded>
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity light="type: ambient; intensity: 1.35"></a-entity>
-    <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
   </a-scene>
 
   <script>
-    const DATA_URL = '../../assets/data/part1-1.json';
-    const MIND_URL = '../../assets/targets/part1-1.mind';
+    const DATA_URL='../../assets/data/part1-1.json';
+    const MIND_URL='../../assets/targets/part1-1.mind';
 
-    const scene = document.getElementById('scene');
-    const startScreen = document.getElementById('start');
-    const startBtn = document.getElementById('startBtn');
-    const errorEl = document.getElementById('error');
-    const statusEl = document.getElementById('status');
+    const scene=document.getElementById('scene');
+    const startScreen=document.getElementById('start');
+    const startBtn=document.getElementById('startBtn');
+    const errorEl=document.getElementById('error');
+    const statusEl=document.getElementById('status');
 
-    const PART1_COLOR = '#38bdf8';
-    const PART1_SHADOW = '#082f49';
-    const PART1_STROKE = '#00131d';
+    let dataReady=false;
+    let targetsBuilt=false;
+    let items=[];
+    const foundTargets=new Set();
 
-    // ปรับระยะห่างระหว่างตัวอักษรตรงนี้
-    // 0.000 = ชิดแบบเดิม, 0.004 = ห่างเล็กน้อย, 0.008 = ห่างชัด, 0.012 = ห่างมาก
-    const LETTER_GAP = 0.007;
-
-    let vocabData = [];
-    let dataReady = false;
-    let targetsBuilt = false;
-    const foundTargets = new Set();
-
-    function setStatus(text, found = false) {
-      statusEl.textContent = text;
-      statusEl.classList.toggle('found', !!found);
+    function setStatus(text,found=false){
+      statusEl.textContent=text;
+      statusEl.classList.toggle('found',!!found);
     }
 
-    function showError(message) {
-      errorEl.style.display = 'block';
-      errorEl.textContent = message;
+    function showError(message){
+      errorEl.style.display='block';
+      errorEl.textContent=message;
     }
 
-    function cleanText(value) {
-      return String(value || '').replace(/;/g, ',').replace(/\s+/g, ' ').trim();
+    function cleanText(value){
+      return String(value||'').replace(/\s+/g,' ').trim();
     }
 
-    function getTerms(item) {
-      if (Array.isArray(item.terms) && item.terms.length > 0) {
-        return item.terms.map(cleanText).filter(Boolean);
+    function waitForSceneLoaded(){
+      return new Promise((resolve)=>{
+        if(scene.hasLoaded)resolve();
+        else scene.addEventListener('loaded',resolve,{once:true});
+      });
+    }
+
+    async function checkFile(url,message){
+      const response=await fetch(url,{cache:'no-store'});
+      if(!response.ok)throw new Error(message);
+    }
+
+    async function startAR(){
+      try{
+        startBtn.disabled=true;
+        errorEl.style.display='none';
+        setStatus('Starting');
+
+        await checkFile(MIND_URL,'Cannot find .mind file');
+        await waitForSceneLoaded();
+        if(!dataReady)await loadData();
+
+        const mindarSystem=scene.systems['mindar-image-system'];
+        if(!mindarSystem)throw new Error('MindAR system is not ready');
+
+        await mindarSystem.start();
+        startScreen.style.display='none';
+        setStatus('Scanning');
+      }catch(error){
+        console.error(error);
+        setStatus('Error');
+        showError(error.message||'Cannot start AR. Please check camera permission and files.');
+        startBtn.disabled=false;
       }
+    }
 
-      if (item.displayText) {
-        return String(item.displayText).split(',').map(cleanText).filter(Boolean);
-      }
+    scene.addEventListener('arError',()=>{
+      setStatus('Camera Error');
+      showError('Camera access failed. Please allow camera permission and reload this page.');
+    });
 
-      if (item.word) return [cleanText(item.word)];
+    startBtn.addEventListener('click',startAR);
+
+    function getTerms(item){
+      if(Array.isArray(item.terms)&&item.terms.length)return item.terms.map(cleanText).filter(Boolean);
+      if(item.displayText)return String(item.displayText).split(',').map(cleanText).filter(Boolean);
+      if(item.word)return [cleanText(item.word)];
       return [];
     }
 
-    function getTextSize(lines) {
-      const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    function makeTextTexture(lines){
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      const width=1600;
+      canvas.width=width;
 
-      if (lines.length >= 6 || longest >= 26) return 0.034;
-      if (lines.length >= 5 || longest >= 22) return 0.040;
-      if (lines.length >= 4 || longest >= 18) return 0.046;
-      if (lines.length >= 3 || longest >= 14) return 0.054;
-      return 0.065;
-    }
+      const longest=lines.reduce((m,l)=>Math.max(m,l.length),0);
+      let fontSize=100;
+      if(lines.length>=6||longest>=26)fontSize=70;
+      else if(lines.length>=5||longest>=22)fontSize=78;
+      else if(lines.length>=4||longest>=18)fontSize=86;
+      else if(lines.length>=3||longest>=14)fontSize=94;
 
-    function getCharWidth(char, size) {
-      if (char === ' ') return size * 0.48;
-      if ('ilI.,:;!|'.includes(char)) return size * 0.34;
-      if ('mwMW'.includes(char)) return size * 0.92;
-      if ('fjrt()[]'.includes(char)) return size * 0.48;
-      if ('ABCDEFGHKNOPQRSTUVWXYZ'.includes(char)) return size * 0.72;
-      return size * 0.62;
-    }
+      const lineHeight=Math.round(fontSize*1.28);
+      const height=Math.max(260,lines.length*lineHeight+86);
+      canvas.height=height;
 
-    function centerTextMesh(entity) {
-      const applyCenter = () => {
-        let didCenter = false;
+      ctx.clearRect(0,0,width,height);
+      ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.lineJoin='round';
 
-        entity.object3D.traverse((child) => {
-          if (!child.isMesh || !child.geometry) return;
-          if (child.geometry.userData && child.geometry.userData.centeredX) return;
+      const startY=height/2-((lines.length-1)*lineHeight)/2;
+      lines.forEach((line,index)=>{
+        const y=startY+index*lineHeight;
 
-          child.geometry.computeBoundingBox();
-          const box = child.geometry.boundingBox;
-          if (!box) return;
+        ctx.shadowColor='rgba(8,47,73,.70)';
+        ctx.shadowBlur=10;
+        ctx.shadowOffsetX=8;
+        ctx.shadowOffsetY=8;
 
-          const centerX = (box.min.x + box.max.x) / 2;
-          child.geometry.translate(-centerX, 0, 0);
-          child.geometry.computeBoundingBox();
+        ctx.lineWidth=Math.max(8,Math.round(fontSize*.12));
+        ctx.strokeStyle='rgba(0,19,29,.95)';
+        ctx.strokeText(line,width/2,y);
 
-          child.geometry.userData = child.geometry.userData || {};
-          child.geometry.userData.centeredX = true;
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
 
-          didCenter = true;
-        });
-
-        return didCenter;
-      };
-
-      const tryCenter = (attempt = 0) => {
-        if (applyCenter()) return;
-        if (attempt > 30) return;
-        requestAnimationFrame(() => tryCenter(attempt + 1));
-      };
-
-      entity.addEventListener('object3dset', () => tryCenter());
-      entity.addEventListener('componentinitialized', (event) => {
-        if (event.detail && event.detail.name === 'text-geometry') tryCenter();
+        ctx.fillStyle='#38bdf8';
+        ctx.fillText(line,width/2,y);
       });
 
-      tryCenter();
-      setTimeout(() => tryCenter(), 100);
-      setTimeout(() => tryCenter(), 300);
-      setTimeout(() => tryCenter(), 700);
-      setTimeout(() => tryCenter(), 1200);
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.needsUpdate=true;
+      texture.minFilter=THREE.LinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      return {texture,aspect:canvas.width/canvas.height};
     }
 
-    function createCharGeometry(char, position, size, role = 'front') {
-      const text = document.createElement('a-entity');
-      text.setAttribute('position', position);
-      text.setAttribute('rotation', '0 0 0');
+    function buildTextPlane(item){
+      const lines=getTerms(item);
+      const group=document.createElement('a-entity');
+      group.setAttribute('position','0 0.02 0.06');
+      if(!lines.length)return group;
 
-      text.setAttribute('text-geometry', {
-        value: char,
-        font: '#fontBold',
-        align: 'center',
-        size: size,
-        height: 0.018,
-        curveSegments: 5,
-        bevelEnabled: true,
-        bevelSize: 0.0025,
-        bevelThickness: 0.0025
+      const made=makeTextTexture(lines);
+      const width=1.08;
+      const height=width/made.aspect;
+
+      const plane=document.createElement('a-plane');
+      plane.setAttribute('geometry',`primitive: plane; width: ${width}; height: ${height}`);
+      plane.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: false; depthWrite: false');
+      plane.addEventListener('loaded',()=>{
+        const mesh=plane.getObject3D('mesh');
+        if(!mesh)return;
+        mesh.material.map=made.texture;
+        mesh.material.transparent=true;
+        mesh.material.needsUpdate=true;
       });
 
-      if (role === 'stroke') {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART1_STROKE,
-          emissive: PART1_STROKE,
-          emissiveIntensity: 0.10,
-          opacity: 0.98,
-          transparent: true,
-          metalness: 0,
-          roughness: 0.75,
-          side: 'double'
-        });
-      } else if (role === 'shadow') {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART1_SHADOW,
-          emissive: PART1_SHADOW,
-          emissiveIntensity: 0.16,
-          opacity: 0.70,
-          transparent: true,
-          metalness: 0,
-          roughness: 0.7,
-          side: 'double'
-        });
-      } else {
-        text.setAttribute('material', {
-          shader: 'standard',
-          color: PART1_COLOR,
-          emissive: PART1_COLOR,
-          emissiveIntensity: 0.55,
-          metalness: 0.02,
-          roughness: 0.25,
-          side: 'double'
-        });
-      }
-
-      centerTextMesh(text);
-      return text;
-    }
-
-    function buildLetterSpacedLine(line, y, size) {
-      const lineGroup = document.createElement('a-entity');
-      const chars = Array.from(cleanText(line));
-      const widths = chars.map((char) => getCharWidth(char, size));
-
-      const totalWidth =
-        widths.reduce((sum, width) => sum + width, 0) +
-        Math.max(0, chars.length - 1) * LETTER_GAP;
-
-      let cursorX = -totalWidth / 2;
-
-      chars.forEach((char, index) => {
-        const width = widths[index];
-
-        if (char !== ' ') {
-          const x = cursorX + width / 2;
-
-          const shadow = createCharGeometry(
-            char,
-            `${(x + 0.007).toFixed(4)} ${(y - 0.007).toFixed(4)} -0.012`,
-            size,
-            'shadow'
-          );
-
-          const thinStrokeOffsets = [
-            [-0.004,  0.000],
-            [ 0.004,  0.000],
-            [ 0.000, -0.004],
-            [ 0.000,  0.004]
-          ];
-
-          lineGroup.appendChild(shadow);
-
-          thinStrokeOffsets.forEach(([sx, sy]) => {
-            const stroke = createCharGeometry(
-              char,
-              `${(x + sx).toFixed(4)} ${(y + sy).toFixed(4)} -0.003`,
-              size,
-              'stroke'
-            );
-            lineGroup.appendChild(stroke);
-          });
-
-          const front = createCharGeometry(
-            char,
-            `${x.toFixed(4)} ${y.toFixed(4)} 0.002`,
-            size,
-            'front'
-          );
-
-          lineGroup.appendChild(front);
-        }
-
-        cursorX += width + LETTER_GAP;
-      });
-
-      return lineGroup;
-    }
-
-    function buildTextGroup(item) {
-      const group = document.createElement('a-entity');
-      const lines = getTerms(item);
-      if (!lines.length) return group;
-
-      const size = getTextSize(lines);
-      const gap = size * 1.55;
-      const startY = ((lines.length - 1) * gap) / 2;
-
-      group.setAttribute('position', '0 0 0.06');
-      group.setAttribute('rotation', '0 0 0');
-
-      lines.forEach((line, index) => {
-        const y = startY - (index * gap);
-        group.appendChild(buildLetterSpacedLine(line, y, size));
-      });
-
+      group.appendChild(plane);
       return group;
     }
 
-    function buildTargets() {
-      if (targetsBuilt) return;
+    function buildTargets(){
+      if(targetsBuilt)return;
 
-      vocabData.forEach((item) => {
-        const target = document.createElement('a-entity');
-        target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
+      items.forEach((item)=>{
+        const target=document.createElement('a-entity');
+        target.setAttribute('mindar-image-target',`targetIndex: ${item.index}`);
 
-        const textGroup = buildTextGroup(item);
-        target.appendChild(textGroup);
-
-        target.addEventListener('targetFound', () => {
+        target.addEventListener('targetFound',()=>{
           foundTargets.add(item.index);
-          setStatus('Found', true);
-          if (navigator.vibrate) navigator.vibrate(35);
+          setStatus('Found',true);
+          if(!target.__content){
+            target.__content=buildTextPlane(item);
+            target.appendChild(target.__content);
+          }
+          if(navigator.vibrate)navigator.vibrate(25);
         });
 
-        target.addEventListener('targetLost', () => {
+        target.addEventListener('targetLost',()=>{
           foundTargets.delete(item.index);
-          if (foundTargets.size === 0) setStatus('Scanning', false);
+          if(target.__content){
+            target.removeChild(target.__content);
+            target.__content=null;
+          }
+          if(foundTargets.size===0)setStatus('Scanning');
         });
 
         scene.appendChild(target);
       });
 
-      targetsBuilt = true;
+      targetsBuilt=true;
     }
 
-    async function loadData() {
-      const response = await fetch(DATA_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot load part1-1.json');
-
-      vocabData = await response.json();
-      if (!Array.isArray(vocabData) || vocabData.length === 0) {
-        throw new Error('part1-1.json has no data');
-      }
-
+    async function loadData(){
+      const response=await fetch(DATA_URL,{cache:'no-store'});
+      if(!response.ok)throw new Error('Cannot load part1-1.json');
+      items=await response.json();
+      if(!Array.isArray(items)||!items.length)throw new Error('part1-1.json has no data');
       buildTargets();
-      dataReady = true;
+      dataReady=true;
     }
 
-    function waitForSceneLoaded() {
-      return new Promise((resolve) => {
-        if (scene.hasLoaded) resolve();
-        else scene.addEventListener('loaded', resolve, { once: true });
-      });
-    }
-
-    async function checkMindFile() {
-      const response = await fetch(MIND_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot find assets/targets/part1-1.mind');
-    }
-
-    async function startAR() {
-      try {
-        startBtn.disabled = true;
-        errorEl.style.display = 'none';
-        setStatus('Starting');
-
-        await checkMindFile();
-        await waitForSceneLoaded();
-
-        if (!dataReady) await loadData();
-
-        const mindarSystem = scene.systems['mindar-image-system'];
-        if (!mindarSystem) throw new Error('MindAR system is not ready');
-
-        await mindarSystem.start();
-
-        startScreen.style.display = 'none';
-        setStatus('Scanning');
-      } catch (error) {
-        console.error(error);
-        setStatus('Error');
-        showError(error.message || 'Cannot start AR. Please check camera permission and .mind file.');
-        startBtn.disabled = false;
-      }
-    }
-
-    scene.addEventListener('arReady', () => console.log('[1.1] AR ready'));
-
-    scene.addEventListener('arError', () => {
-      setStatus('Camera Error');
-      showError('Camera access failed. Please allow camera permission and reload this page.');
-    });
-
-    startBtn.addEventListener('click', startAR);
-
-    loadData().catch((error) => {
-      console.error(error);
-      setStatus('Data Error');
-      showError(error.message || 'Cannot load AR data.');
-    });
-  </script>
+    loadData().catch(error=>{console.error(error);setStatus('Data Error');showError(error.message||'Cannot load AR data.');});
+</script>
 </body>
 </html>
