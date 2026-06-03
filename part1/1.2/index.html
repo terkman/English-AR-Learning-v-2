@@ -4,31 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>1.2 Scan Image to Image</title>
-
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
   <style>
-    :root { --line: rgba(255,255,255,.16); --part1: #38bdf8; --yellow: #facc15; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; touch-action: manipulation; }
-    a-scene, a-scene canvas { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 1 !important; background: transparent !important; }
-    video { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; object-fit: cover !important; z-index: 0 !important; background: #000 !important; }
-    .a-enter-vr, .a-enter-ar, .mindar-ui-overlay, .mindar-ui-scanning, .mindar-ui-loading, .mindar-ui-error { display: none !important; }
-    .topbar { position: fixed; z-index: 30; top: 0; left: 0; right: 0; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: linear-gradient(180deg, rgba(2,6,23,.55), rgba(2,6,23,0)); pointer-events: none; }
-    .topbar > * { pointer-events: auto; }
-    .back { display: inline-flex; align-items: center; gap: 6px; color: #fff; text-decoration: none; background: rgba(15,23,42,.62); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-weight: 900; font-size: 14px; backdrop-filter: blur(12px); }
-    .status { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 950; letter-spacing: .04em; color: #02111f; background: rgba(56,189,248,.92); box-shadow: 0 8px 30px rgba(14,165,233,.22); }
-    .status.found { background: rgba(250,204,21,.96); box-shadow: 0 8px 30px rgba(250,204,21,.22); }
-    .start { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 22px; background: radial-gradient(circle at top, #0e7490 0%, #082f49 38%, #020617 72%); text-align: center; }
-    .start-card { width: min(520px, 100%); border: 1px solid rgba(255,255,255,.18); border-radius: 28px; padding: 26px; background: rgba(255,255,255,.10); box-shadow: 0 24px 90px rgba(0,0,0,.5); backdrop-filter: blur(16px); }
-    .start h1 { margin: 0 0 8px; font-size: clamp(26px, 8vw, 38px); line-height: 1.08; font-weight: 950; }
-    .start p { margin: 8px auto 16px; max-width: 420px; line-height: 1.55; color: #dbeafe; font-size: 15px; }
-    .start button { border: 0; border-radius: 18px; background: var(--part1); color: #00111f; font-size: 17px; font-weight: 950; padding: 14px 22px; box-shadow: 0 12px 30px rgba(56,189,248,.28); }
-    .start button:disabled { opacity: .55; }
-    .hint { font-size: 13px; color: #bae6fd; margin-top: 12px; line-height: 1.45; }
-    .error { display: none; margin-top: 12px; color: #fecaca; background: rgba(127,29,29,.32); border: 1px solid rgba(254,202,202,.25); border-radius: 14px; padding: 10px; line-height: 1.45; text-align: left; }
-  </style>
+    :root{--line:rgba(255,255,255,.16);--part1:#38bdf8;--dark:#082f49;--found:#06d6a0}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation}
+    a-scene,a-scene canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:1!important;background:transparent!important}
+    video{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:0!important;background:#000!important}
+    .a-enter-vr,.a-enter-ar,.mindar-ui-overlay,.mindar-ui-scanning,.mindar-ui-loading,.mindar-ui-error{display:none!important}
+    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(180deg,rgba(2,6,23,.58),rgba(2,6,23,0));pointer-events:none}
+    .topbar>*{pointer-events:auto}
+    .back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(15,23,42,.62);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px)}
+    .status{max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:950;letter-spacing:.04em;color:#02111f;background:rgba(56,189,248,.92);box-shadow:0 8px 30px rgba(14,165,233,.22)}
+    .status.found{background:rgba(6,214,160,.96);box-shadow:0 8px 30px rgba(6,214,160,.22)}
+    .start{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,#0e7490 0%,#082f49 38%,#020617 72%);text-align:center}
+    .start-card{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
+    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#dbeafe;font-size:15px}
+    .start button{border:0;border-radius:18px;background:var(--part1);color:#00111f;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(56,189,248,.28)}
+    .start button:disabled{opacity:.55}.hint{font-size:13px;color:#bae6fd;margin-top:12px;line-height:1.45}
+    .scan-help{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));z-index:25;display:none;transform:translateX(-50%);width:min(430px,calc(100vw - 28px));border-radius:18px;padding:10px 13px;background:rgba(2,6,23,.68);border:1px solid rgba(56,189,248,.22);backdrop-filter:blur(12px);color:#dbeafe;font-size:13px;line-height:1.35;font-weight:800;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+    .scan-help.show{display:block}
+    .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -36,166 +35,255 @@
     <div id="status" class="status">Ready</div>
   </div>
 
+  <div id="scanHelp" class="scan-help">Hold the camera steady and keep the full target image in view.</div>
+
   <div id="start" class="start">
     <div class="start-card">
       <h1>1.2 Scan Image to Image</h1>
-      <p>Tap Start Camera and scan a prepared text image. A context image will appear in AR.</p>
+      <p>iOS optimized version. Scan a prepared text target and a context image will appear.</p>
       <button id="startBtn" type="button">Start Camera</button>
-      <div class="hint">Best on mobile Chrome. Please allow camera permission.</div>
+      <div class="hint">iPhone/iPad: open in Safari if Messenger browser crashes.</div>
       <div id="error" class="error"></div>
     </div>
   </div>
 
-  <a-scene id="scene"
-    mindar-image="imageTargetSrc: ../../assets/targets/part1-2.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01"
+  <a-scene
+    id="scene"
+    mindar-image="imageTargetSrc: ../../assets/targets/part1-2.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; warmupTolerance: 1; missTolerance: 12; filterMinCF: 0.0001; filterBeta: 0.001"
     color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
+    renderer="colorManagement: true; physicallyCorrectLights: false; antialias: true; alpha: true; precision: mediump; powerPreference: high-performance"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded>
-    <a-assets id="assetBox" timeout="20000"></a-assets>
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity light="type: ambient; intensity: 1.25"></a-entity>
-    <a-entity light="type: directional; intensity: 0.8" position="0 1 1"></a-entity>
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
   </a-scene>
 
   <script>
-    const DATA_URL = '../../assets/data/part1-2.json';
-    const MIND_URL = '../../assets/targets/part1-2.mind';
-    const RESULT_BASE = '../../assets/images/part1/1.2/results/';
+    const DATA_URL='../../assets/data/part1-2.json';
+    const MIND_URL='../../assets/targets/part1-2.mind';
+    const RESULT_BASE='../../assets/images/part1/1.2/results/';
 
-    const scene = document.getElementById('scene');
-    const assetBox = document.getElementById('assetBox');
-    const startScreen = document.getElementById('start');
-    const startBtn = document.getElementById('startBtn');
-    const errorEl = document.getElementById('error');
-    const statusEl = document.getElementById('status');
+    const scene=document.getElementById('scene');
+    const startScreen=document.getElementById('start');
+    const startBtn=document.getElementById('startBtn');
+    const errorEl=document.getElementById('error');
+    const statusEl=document.getElementById('status');
+    const scanHelp=document.getElementById('scanHelp');
 
-    let imageData = [];
-    let dataReady = false;
-    let targetsBuilt = false;
-    const foundTargets = new Set();
+    let dataReady=false;
+    let targetsBuilt=false;
+    let items=[];
+    const foundTargets=new Set();
 
-    function setStatus(text, found = false) {
-      statusEl.textContent = text;
-      statusEl.classList.toggle('found', !!found);
+    function setStatus(text,found=false){
+      statusEl.textContent=text;
+      statusEl.classList.toggle('found',!!found);
+      if(found){
+        scanHelp.classList.remove('show');
+      }
     }
 
-    function showError(message) {
-      errorEl.style.display = 'block';
-      errorEl.textContent = message;
+    function scheduleScanHelp(){
+      clearTimeout(scanHelpTimer);
+      scanHelpTimer=setTimeout(()=>{
+        if(foundTargets.size===0 && startScreen.style.display==='none'){
+          scanHelp.classList.add('show');
+        }
+      },4500);
     }
 
-    function addImageAsset(item) {
-      const img = document.createElement('img');
-      img.setAttribute('id', `result-${item.index}`);
-      img.setAttribute('src', RESULT_BASE + item.resultImage);
-      img.setAttribute('crossorigin', 'anonymous');
-      assetBox.appendChild(img);
+    function showError(message){
+      errorEl.style.display='block';
+      errorEl.textContent=message;
     }
 
-    function buildResultImage(item) {
-      const group = document.createElement('a-entity');
-      group.setAttribute('position', '0 0 0.06');
-      group.setAttribute('rotation', '0 0 0');
+    function cleanText(value){
+      return String(value||'').replace(/\s+/g,' ').trim();
+    }
 
-      const shadow = document.createElement('a-plane');
-      shadow.setAttribute('width', '1.10');
-      shadow.setAttribute('height', '0.83');
-      shadow.setAttribute('position', '0.012 -0.012 -0.012');
-      shadow.setAttribute('material', 'color: #020617; opacity: 0.34; transparent: true; side: double');
+    function waitForSceneLoaded(){
+      return new Promise((resolve)=>{
+        if(scene.hasLoaded)resolve();
+        else scene.addEventListener('loaded',resolve,{once:true});
+      });
+    }
 
-      const image = document.createElement('a-image');
-      image.setAttribute('src', `#result-${item.index}`);
-      image.setAttribute('width', '1.06');
-      image.setAttribute('height', '0.795');
-      image.setAttribute('position', '0 0 0');
-      image.setAttribute('material', 'shader: flat; transparent: true; side: double');
+    async function checkFile(url,message){
+      const response=await fetch(url,{cache:'no-store'});
+      if(!response.ok)throw new Error(message);
+    }
 
-      group.appendChild(shadow);
-      group.appendChild(image);
+    async function startAR(){
+      try{
+        startBtn.disabled=true;
+        errorEl.style.display='none';
+        setStatus('Starting');
+
+        await checkFile(MIND_URL,'Cannot find .mind file');
+        await waitForSceneLoaded();
+        if(!dataReady)await loadData();
+
+        const mindarSystem=scene.systems['mindar-image-system'];
+        if(!mindarSystem)throw new Error('MindAR system is not ready');
+
+        await mindarSystem.start();
+        startScreen.style.display='none';
+        setStatus('Scanning');
+        scheduleScanHelp();
+        setTimeout(preloadResultImages,600);
+      }catch(error){
+        console.error(error);
+        setStatus('Error');
+        showError(error.message||'Cannot start AR. Please check camera permission and files.');
+        startBtn.disabled=false;
+      }
+    }
+
+    scene.addEventListener('arError',()=>{
+      setStatus('Camera Error');
+      showError('Camera access failed. Please allow camera permission and reload this page.');
+    });
+
+    startBtn.addEventListener('click',startAR);
+
+    const textureCache=new Map();
+
+    function loadTexture(url){
+      if(textureCache.has(url))return textureCache.get(url);
+      const promise=new Promise((resolve,reject)=>{
+        const loader=new THREE.TextureLoader();
+        loader.load(url,(texture)=>{
+          texture.minFilter=THREE.LinearFilter;
+          texture.magFilter=THREE.LinearFilter;
+          texture.needsUpdate=true;
+          resolve(texture);
+        },undefined,reject);
+      });
+      textureCache.set(url,promise);
+      return promise;
+    }
+
+    function buildImagePlane(item){
+      const group=document.createElement('a-entity');
+      group.setAttribute('position','0 0 0.055');
+
+      const frame=document.createElement('a-plane');
+      frame.setAttribute('geometry','primitive: plane; width: 1.18; height: 0.78');
+      frame.setAttribute('position','0 0 -0.006');
+      frame.setAttribute('material','shader: flat; color: #020617; opacity: 0.72; transparent: true; side: double; depthTest: false; depthWrite: false');
+      group.appendChild(frame);
+
+      const plane=document.createElement('a-plane');
+      plane.setAttribute('geometry','primitive: plane; width: 1.12; height: 0.72');
+      plane.setAttribute('material','shader: flat; color: #ffffff; transparent: true; opacity: 1; side: double; depthTest: false; depthWrite: false');
+      group.appendChild(plane);
+
+      const imageUrl=RESULT_BASE+item.resultImage;
+
+      const applyTexture=async()=>{
+        try{
+          const texture=await loadTexture(imageUrl);
+          const image=texture.image;
+          const aspect=image&&image.width&&image.height ? image.width/image.height : 1.55;
+
+          const maxW=1.14;
+          const maxH=0.82;
+          let width=maxW;
+          let height=width/aspect;
+
+          if(height>maxH){
+            height=maxH;
+            width=height*aspect;
+          }
+
+          plane.setAttribute('geometry',`primitive: plane; width: ${width}; height: ${height}`);
+          frame.setAttribute('geometry',`primitive: plane; width: ${width+0.06}; height: ${height+0.06}`);
+
+          const mesh=plane.getObject3D('mesh');
+          if(mesh){
+            mesh.material.map=texture;
+            mesh.material.color.set('#ffffff');
+            mesh.material.transparent=true;
+            mesh.material.needsUpdate=true;
+          }
+        }catch(error){
+          console.error('Cannot load result image',imageUrl,error);
+        }
+      };
+
+      if(plane.hasLoaded)applyTexture();
+      else plane.addEventListener('loaded',applyTexture,{once:true});
+
       return group;
     }
 
-    function buildTargets() {
-      if (targetsBuilt) return;
+    function preloadResultImages(){
+      if(!Array.isArray(items))return;
+      let delay=250;
+      items.forEach((item)=>{
+        if(!item.resultImage)return;
+        const url=RESULT_BASE+item.resultImage;
+        setTimeout(()=>loadTexture(url).catch(()=>{}),delay);
+        delay+=120;
+      });
+    }
 
-      imageData.forEach((item) => {
-        addImageAsset(item);
-        const target = document.createElement('a-entity');
-        target.setAttribute('mindar-image-target', `targetIndex: ${item.index}`);
-        target.appendChild(buildResultImage(item));
+    function buildTargets(){
+      if(targetsBuilt)return;
 
-        target.addEventListener('targetFound', () => {
+      items.forEach((item)=>{
+        const target=document.createElement('a-entity');
+        target.setAttribute('mindar-image-target',`targetIndex: ${item.index}`);
+
+        target.addEventListener('targetFound',()=>{
           foundTargets.add(item.index);
-          setStatus('Found', true);
-          if (navigator.vibrate) navigator.vibrate(35);
+          setStatus('Found',true);
+          scanHelp.classList.remove('show');
+          if(target.__removeTimer){
+            clearTimeout(target.__removeTimer);
+            target.__removeTimer=null;
+          }
+          if(!target.__content){
+            target.__content=buildImagePlane(item);
+            target.appendChild(target.__content);
+          }
+          if(navigator.vibrate)navigator.vibrate(25);
         });
 
-        target.addEventListener('targetLost', () => {
+        target.addEventListener('targetLost',()=>{
           foundTargets.delete(item.index);
-          if (foundTargets.size === 0) setStatus('Scanning', false);
+          if(target.__content){
+            target.__removeTimer=setTimeout(()=>{
+              if(foundTargets.has(item.index))return;
+              if(target.__content){
+                target.removeChild(target.__content);
+                target.__content=null;
+              }
+            },700);
+          }
+          if(foundTargets.size===0){
+            setStatus('Scanning');
+            scheduleScanHelp();
+          }
         });
 
         scene.appendChild(target);
       });
 
-      targetsBuilt = true;
+      targetsBuilt=true;
     }
 
-    async function loadData() {
-      const response = await fetch(DATA_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot load part1-2.json');
-      imageData = await response.json();
-      if (!Array.isArray(imageData) || imageData.length === 0) throw new Error('part1-2.json has no data');
+    async function loadData(){
+      const response=await fetch(DATA_URL,{cache:'no-store'});
+      if(!response.ok)throw new Error('Cannot load part1-2.json');
+      items=await response.json();
+      if(!Array.isArray(items)||!items.length)throw new Error('part1-2.json has no data');
       buildTargets();
-      dataReady = true;
+      dataReady=true;
     }
 
-    function waitForSceneLoaded() {
-      return new Promise((resolve) => {
-        if (scene.hasLoaded) resolve();
-        else scene.addEventListener('loaded', resolve, { once: true });
-      });
-    }
-
-    async function checkMindFile() {
-      const response = await fetch(MIND_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Cannot find assets/targets/part1-2.mind');
-    }
-
-    async function startAR() {
-      try {
-        startBtn.disabled = true;
-        errorEl.style.display = 'none';
-        setStatus('Starting');
-        await checkMindFile();
-        await waitForSceneLoaded();
-        if (!dataReady) await loadData();
-        const mindarSystem = scene.systems['mindar-image-system'];
-        if (!mindarSystem) throw new Error('MindAR system is not ready');
-        await mindarSystem.start();
-        startScreen.style.display = 'none';
-        setStatus('Scanning');
-      } catch (error) {
-        console.error(error);
-        setStatus('Error');
-        showError(error.message || 'Cannot start AR. Please check camera permission and .mind file.');
-        startBtn.disabled = false;
-      }
-    }
-
-    scene.addEventListener('arReady', () => console.log('[1.2] AR ready'));
-    scene.addEventListener('arError', () => {
-      setStatus('Camera Error');
-      showError('Camera access failed. Please allow camera permission and reload this page.');
-    });
-    startBtn.addEventListener('click', startAR);
-    loadData().catch((error) => {
-      console.error(error);
-      setStatus('Data Error');
-      showError(error.message || 'Cannot load AR data.');
-    });
-  </script>
+    loadData().catch(error=>{console.error(error);setStatus('Data Error');showError(error.message||'Cannot load AR data.');});
+</script>
 </body>
 </html>
