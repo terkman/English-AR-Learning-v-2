@@ -103,14 +103,23 @@
     let sourceData=null;
     let items=[];
     let wheelItems=[];
+    // Short labels must match wheelItems order from AR Source Wheel exactly.
+    // 1 Dictionary -> Cambridge/Oxford/Longdo
+    // 2 Grammar -> British Council/Cambridge Grammar/Grammarly Blog
+    // 3 Real Texts -> signs, labels, menus, app screens, ads
+    // 4 Official Sites -> university/airport/hospital/store websites
+    // 5 Examples -> YouGlish/Ludwig/dictionary examples
+    // 6 Videos -> YouTube/TikTok/podcast/service videos
+    // 7 People -> friends/teachers/staff/native speakers
+    // 8 AI Tools -> ChatGPT/Grammarly/Google Translate/DeepL
     const WHEEL_LABELS=[
-      'Dictionary',
-      'Grammar',
-      'Real\nSigns',
+      'Dictionary\nLongdo',
+      'Grammar\nGuide',
+      'Real\nTexts',
       'Official\nSites',
-      'Examples',
-      'Videos',
-      'People',
+      'Sentence\nExamples',
+      'Videos\nPodcast',
+      'People\nTeachers',
       'AI\nTools'
     ];
     let dataReady=false;
@@ -290,7 +299,7 @@
       ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       ctx.lineJoin='round';
 
-      const lineHeight=fontSize*0.92;
+      const lineHeight=fontSize*0.98;
       const startY=-((lines.length-1)*lineHeight)/2;
 
       lines.forEach((line,index)=>{
@@ -324,7 +333,7 @@
       ctx.clearRect(0,0,size,size);
 
       colors.forEach((color,index)=>{
-        const start=-Math.PI/2+index*segment;
+        const start=-Math.PI/2-(segment/2)+(index*segment);
         const end=start+segment;
 
         ctx.beginPath();
@@ -340,7 +349,7 @@
 
         // label placed in the middle of each segment
         const mid=start+(segment/2);
-        const labelRadius=size*0.315;
+        const labelRadius=size*0.335;
         const x=cx+Math.cos(mid)*labelRadius;
         const y=cy+Math.sin(mid)*labelRadius;
 
@@ -350,7 +359,7 @@
           labelAngle+=Math.PI;
         }
 
-        drawWheelLabel(ctx,WHEEL_LABELS[index]||String(index+1),x,y,labelAngle,54);
+        drawWheelLabel(ctx,WHEEL_LABELS[index]||String(index+1),x,y,labelAngle,44);
       });
 
       ctx.beginPath();
@@ -588,7 +597,11 @@
 
       const selectedIndex=Math.floor(Math.random()*wheelItems.length);
       const segment=360/wheelItems.length;
-      const targetAngle=360-(selectedIndex*segment+segment/2);
+
+      // The wheel texture is drawn with item 0 centered at the top pointer.
+      // Rotating by -index*segment puts the selected label under the pointer,
+      // so the label on the wheel matches the selected source below.
+      const targetAngle=(360-(selectedIndex*segment))%360;
       const extraTurns=360*(4+Math.floor(Math.random()*3));
       wheelRotation+=extraTurns+targetAngle-(wheelRotation%360);
 
