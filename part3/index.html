@@ -39,6 +39,8 @@
 
     .wheel-panel{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:35;display:none;border:1px solid rgba(192,132,252,.34);border-radius:22px;background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.48);backdrop-filter:blur(16px);padding:12px}
     .wheel-panel.show{display:block}
+    .popup-label{color:var(--part3);font-size:12px;font-weight:950;letter-spacing:.07em;text-transform:uppercase;margin:0 0 7px}
+    .popup-question{max-height:86px;overflow:auto;border-radius:16px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:14px;line-height:1.45;font-weight:750;margin-bottom:10px;white-space:normal}
     .result-label{color:#c4b5fd;font-size:12px;font-weight:950;letter-spacing:.07em;text-transform:uppercase;margin:0 0 7px}
     .wheel-result{min-height:46px;border-radius:16px;padding:10px 12px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:14px;line-height:1.35;font-weight:800}
     .small-hint{margin-top:7px;color:#cbd5e1;font-size:12px;font-weight:700;line-height:1.35}
@@ -63,13 +65,17 @@
   </div>
 
   <div id="wheelPanel" class="wheel-panel">
+    <div class="popup-label">Question</div>
+    <div id="popupQuestion" class="popup-question"></div>
     <div class="result-label">Selected Source</div>
     <div id="wheelResult" class="wheel-result">แตะวงล้อเพื่อสุ่มแหล่งข้อมูล</div>
-    <div class="small-hint">วงล้ออยู่บนภาพที่สแกน แตะวงล้อเพื่อ Spin</div>
+    <div class="small-hint">แตะวงล้อหรือแตะบริเวณกล้องเพื่อ Spin</div>
   </div>
 
   <a-scene
     id="scene"
+    cursor="rayOrigin: mouse; fuse: false"
+    raycaster="objects: .clickable"
     mindar-image="imageTargetSrc: ../assets/targets/part3-1.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
@@ -92,6 +98,7 @@
     const statusEl=document.getElementById('status');
     const wheelPanel=document.getElementById('wheelPanel');
     const wheelResult=document.getElementById('wheelResult');
+    const popupQuestion=document.getElementById('popupQuestion');
 
     let sourceData=null;
     let items=[];
@@ -116,45 +123,54 @@
       return ctx.measureText(text).width;
     }
 
-    function splitThaiChunk(ctx,chunk,maxWidth){
+    function segmentThaiText(text){
+      if(typeof Intl!=='undefined' && Intl.Segmenter){
+        try{
+          const segmenter=new Intl.Segmenter('th',{granularity:'word'});
+          return Array.from(segmenter.segment(text)).map(part=>part.segment).filter(Boolean);
+        }catch(error){}
+      }
+      return Array.from(text);
+    }
+
+    function splitLongToken(ctx,token,maxWidth){
+      const parts=/[ก-๙]/.test(token) ? segmentThaiText(token) : Array.from(token);
       const pieces=[];
       let line='';
-      Array.from(chunk).forEach(ch=>{
-        const candidate=line+ch;
+
+      parts.forEach(part=>{
+        const candidate=line+part;
         if(measureText(ctx,candidate)>maxWidth&&line){
           pieces.push(line);
-          line=ch;
+          line=part;
         }else{
           line=candidate;
         }
       });
+
       if(line)pieces.push(line);
       return pieces;
     }
 
-    function tokenizeMixedText(text){
-      const parts=cleanText(text).split(/(\s+)/).filter(Boolean);
+    function tokenizeForWrap(text){
+      const raw=String(text||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
       const tokens=[];
-      let latinBuffer='';
+      let latinBuffer=[];
 
       function flushLatin(){
-        if(latinBuffer.trim()){
-          tokens.push(latinBuffer.trim());
-          latinBuffer='';
+        if(latinBuffer.length){
+          tokens.push(latinBuffer.join(' '));
+          latinBuffer=[];
         }
       }
 
-      parts.forEach(part=>{
-        if(/^\s+$/.test(part)){
-          if(latinBuffer)latinBuffer+=' ';
-          return;
-        }
-
-        if(isLatinToken(part)){
-          latinBuffer+=latinBuffer?` ${part}`:part;
+      raw.forEach(token=>{
+        if(isLatinToken(token)){
+          latinBuffer.push(token);
+          if(latinBuffer.length>=4)flushLatin();
         }else{
           flushLatin();
-          tokens.push(part);
+          tokens.push(token);
         }
       });
 
@@ -163,16 +179,10 @@
     }
 
     function wrapCanvasText(ctx,text,maxWidth){
-      const rawTokens=tokenizeMixedText(text);
       const tokens=[];
-
-      rawTokens.forEach(token=>{
+      tokenizeForWrap(text).forEach(token=>{
         if(measureText(ctx,token)>maxWidth){
-          if(/[ก-๙]/.test(token)){
-            splitThaiChunk(ctx,token,maxWidth).forEach(piece=>tokens.push(piece));
-          }else{
-            token.split(' ').forEach(piece=>tokens.push(piece));
-          }
+          splitLongToken(ctx,token,maxWidth).forEach(piece=>tokens.push(piece));
         }else{
           tokens.push(token);
         }
@@ -182,8 +192,7 @@
       let line='';
 
       tokens.forEach(token=>{
-        const needSpace=line && isLatinToken(token) && isLatinToken(line.split(' ').slice(-1)[0]);
-        const candidate=line ? (needSpace ? `${line} ${token}` : `${line}${token}`) : token;
+        const candidate=line ? `${line} ${token}` : token;
 
         if(measureText(ctx,candidate)>maxWidth&&line){
           lines.push(line);
@@ -203,27 +212,27 @@
       const width=1800;
       canvas.width=width;
 
-      let fontSize=50;
-      if(question.length>85)fontSize=42;
-      if(question.length>115)fontSize=36;
-      if(question.length>150)fontSize=30;
+      let fontSize=48;
+      if(question.length>85)fontSize=40;
+      if(question.length>115)fontSize=34;
+      if(question.length>150)fontSize=29;
 
-      const maxTextWidth=Math.round(width*0.72);
-      ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      const maxTextWidth=Math.round(width*0.76);
+      ctx.font=`750 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       let lines=wrapCanvasText(ctx,question,maxTextWidth);
 
-      while(lines.length>9&&fontSize>25){
-        fontSize-=3;
-        ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      while(lines.length>10&&fontSize>24){
+        fontSize-=2;
+        ctx.font=`750 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
         lines=wrapCanvasText(ctx,question,maxTextWidth);
       }
 
-      const lineHeight=Math.round(fontSize*1.22);
-      const height=Math.max(250,lines.length*lineHeight+86);
+      const lineHeight=Math.round(fontSize*1.32);
+      const height=Math.max(260,lines.length*lineHeight+92);
       canvas.height=height;
 
       ctx.clearRect(0,0,width,height);
-      ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.font=`750 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       ctx.textAlign='center';
       ctx.textBaseline='middle';
       ctx.lineJoin='round';
@@ -231,13 +240,14 @@
       const startY=height/2-((lines.length-1)*lineHeight)/2;
       lines.forEach((line,i)=>{
         const y=startY+i*lineHeight;
-        ctx.shadowColor='rgba(46,16,101,.72)';
-        ctx.shadowBlur=14;
-        ctx.shadowOffsetX=4;
-        ctx.shadowOffsetY=5;
 
-        ctx.lineWidth=Math.max(7,Math.round(fontSize*.16));
-        ctx.strokeStyle='rgba(2,6,23,.90)';
+        ctx.shadowColor='rgba(46,16,101,.72)';
+        ctx.shadowBlur=12;
+        ctx.shadowOffsetX=3;
+        ctx.shadowOffsetY=4;
+
+        ctx.lineWidth=Math.max(6,Math.round(fontSize*.13));
+        ctx.strokeStyle='rgba(2,6,23,.92)';
         ctx.strokeText(line,width/2,y);
 
         ctx.shadowBlur=0;
@@ -247,8 +257,8 @@
         ctx.fillStyle='#f8fafc';
         ctx.fillText(line,width/2,y);
 
-        ctx.lineWidth=Math.max(2,Math.round(fontSize*.04));
-        ctx.strokeStyle='rgba(216,180,254,.55)';
+        ctx.lineWidth=Math.max(1,Math.round(fontSize*.025));
+        ctx.strokeStyle='rgba(216,180,254,.42)';
         ctx.strokeText(line,width/2,y);
       });
 
@@ -357,7 +367,7 @@
 
     function makeWheelPlane(target,item,size){
       const wheelPlane=document.createElement('a-plane');
-      wheelPlane.classList.add('clickable');
+      wheelPlane.setAttribute('class','clickable');
       wheelPlane.setAttribute('geometry',`primitive: plane; width: ${size}; height: ${size}`);
       wheelPlane.setAttribute('position','0 0 0.015');
       wheelPlane.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: false; depthWrite: false');
@@ -412,7 +422,9 @@
 
       const wheelGroup=document.createElement('a-entity');
       wheelGroup.setAttribute('position','0 0 0.04');
-      wheelGroup.appendChild(makeWheelPlane(group,item,wheelSize));
+      const wheelPlane=makeWheelPlane(group,item,wheelSize);
+      group.__wheelPlane=wheelPlane;
+      wheelGroup.appendChild(wheelPlane);
       wheelGroup.appendChild(makePointerPlane(wheelSize));
 
       group.appendChild(questionPlane);
@@ -422,6 +434,7 @@
 
     function showPanel(item){
       activeItem=item;
+      popupQuestion.textContent=item.question || '';
       wheelResult.textContent='แตะวงล้อเพื่อสุ่มแหล่งข้อมูล';
       wheelPanel.classList.add('show');
     }
@@ -430,6 +443,7 @@
       activeItem=null;
       activeWheelPlane=null;
       wheelPanel.classList.remove('show');
+      popupQuestion.textContent='';
       wheelResult.textContent='แตะวงล้อเพื่อสุ่มแหล่งข้อมูล';
     }
 
@@ -446,6 +460,7 @@
             target.__questionGroup=buildARContentGroup(item);
             target.appendChild(target.__questionGroup);
           }
+          activeWheelPlane=target.__questionGroup.__wheelPlane || activeWheelPlane;
           showPanel(item);
           if(navigator.vibrate)navigator.vibrate(35);
         });
@@ -540,6 +555,22 @@
         isSpinning=false;
       }
     }
+
+
+    function handleGlobalSpinTap(event){
+      if(!activeItem || isSpinning) return;
+
+      const target=event.target;
+      if(target && target.closest && target.closest('.topbar,.wheel-panel,.start')) return;
+
+      // fallback for mobile browsers where AR raycaster click on the plane is unreliable
+      spinWheel();
+    }
+
+    document.addEventListener('click',handleGlobalSpinTap);
+    document.addEventListener('touchend',(event)=>{
+      handleGlobalSpinTap(event);
+    },{passive:true});
 
     scene.addEventListener('arReady',()=>console.log('[3.1] AR ready'));
     scene.addEventListener('arError',()=>{setStatus('Camera Error');showError('Camera access failed. Please allow camera permission and reload this page.')});
