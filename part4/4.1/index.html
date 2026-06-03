@@ -26,6 +26,7 @@
     const DATA_URL='../../assets/data/part4-1.json';
     const app=document.getElementById('app');
     const statusEl=document.getElementById('status');
+    const debugLabels=document.getElementById('debugLabels');
     const loaderEl=document.getElementById('loader');
     const barFill=document.getElementById('barFill');
     const loadText=document.getElementById('loadText');
@@ -46,6 +47,9 @@
     const confirmed=new Set();
     const sprites=[];
     const spriteById={};
+    const hitSpriteById={};
+    const missingNodes=[];
+    const createdLabels=[];
 
     const scene=new THREE.Scene();
     scene.background=new THREE.Color(0x07111f);
@@ -79,20 +83,23 @@
       const ctx=canvas.getContext('2d');
       const label=String(text||'').trim();
 
-      let fontSize=50;
-      if(label.length>18)fontSize=42;
-      if(label.length>26)fontSize=36;
+      let fontSize=54;
+      if(label.length>16)fontSize=46;
+      if(label.length>24)fontSize=38;
+      if(label.length>32)fontSize=32;
 
       ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-      const paddingX=34,paddingY=22;
+
+      const paddingX=38;
+      const paddingY=24;
       const metrics=ctx.measureText(label);
-      canvas.width=Math.max(330,Math.ceil(metrics.width+paddingX*2));
+      canvas.width=Math.max(360,Math.ceil(metrics.width+paddingX*2));
       canvas.height=fontSize+paddingY*2;
 
       ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-      ctx.fillStyle=done?'rgba(22,101,52,.92)':'rgba(15,23,42,.92)';
+      ctx.fillStyle=done?'rgba(22,101,52,.94)':'rgba(15,23,42,.94)';
       ctx.strokeStyle=done?'rgba(134,239,172,.98)':'rgba(251,191,36,.98)';
-      ctx.lineWidth=7;
+      ctx.lineWidth=8;
       roundRect(ctx,4,4,canvas.width-8,canvas.height-8,24);
       ctx.fill();
       ctx.stroke();
@@ -106,14 +113,13 @@
       ctx.shadowOffsetX=3;
       ctx.shadowOffsetY=4;
 
-      ctx.lineWidth=Math.max(6,Math.round(fontSize*.13));
-      ctx.strokeStyle='rgba(2,6,23,.95)';
+      ctx.lineWidth=Math.max(6,Math.round(fontSize*.14));
+      ctx.strokeStyle='rgba(2,6,23,.96)';
       ctx.strokeText(label,canvas.width/2,canvas.height/2+2);
 
       ctx.shadowBlur=0;
       ctx.shadowOffsetX=0;
       ctx.shadowOffsetY=0;
-
       ctx.fillStyle='#ffffff';
       ctx.fillText(label,canvas.width/2,canvas.height/2+2);
 
@@ -121,6 +127,7 @@
       texture.minFilter=THREE.LinearFilter;
       texture.magFilter=THREE.LinearFilter;
       texture.needsUpdate=true;
+
       return {texture,aspect:canvas.width/canvas.height};
     }
 
@@ -129,12 +136,20 @@
     function updateSprite(item){
       const sprite=spriteById[item.id];
       if(!sprite)return;
+
       const made=makeLabelTexture(answers[item.id]||item.shownWord,confirmed.has(item.id));
+
       if(sprite.material.map)sprite.material.map.dispose();
       sprite.material.map=made.texture;
       sprite.material.needsUpdate=true;
+
       const base=sprite.userData.baseScale||1;
       sprite.scale.set(base*made.aspect,base,1);
+
+      const hit=hitSpriteById[item.id];
+      if(hit){
+        hit.scale.set(base*made.aspect*1.35,base*1.65,1);
+      }
     }
 
     function openEditor(item){
@@ -176,24 +191,72 @@
       scoreModal.classList.add('show');
     }
 
-    function findObjectByName(root,name){
-      let found=null;
-      root.traverse(o=>{if(!found&&normalize(o.name)===normalize(name))found=o});
-      return found;
+    function normalizeNodeName(text){
+      return String(text||'')
+        .toLowerCase()
+        .replace(/^_+/,'')
+        .replace(/[’']/g,"")
+        .replace(/[_\-–—]+/g,' ')
+        .replace(/[.,!?%]/g,'')
+        .replace(/\s+/g,' ')
+        .trim();
     }
-    function hideObject(obj){obj.traverse(o=>{if(o.isMesh){o.visible=false}});obj.visible=false}
 
-    function createEditableLabelForObject(root,obj,item){
+    function findObjectByName(root,name){
+      const wanted=normalizeNodeName(name);
+      let exact=null;
+      let contains=null;
+
+      root.traverse(o=>{
+        if(exact)return;
+        const n=normalizeNodeName(o.name);
+        if(!n)return;
+
+        if(n===wanted){
+          exact=o;
+          return;
+        }
+
+        if(!contains && (n.includes(wanted) || wanted.includes(n))){
+          contains=o;
+        }
+      });
+
+      return exact || contains;
+    }
+
+    function hideObject(obj){
+      obj.traverse(o=>{
+        if(o.isMesh){
+          o.visible=false;
+          o.material && (o.material.needsUpdate=true);
+        }
+      });
+      obj.visible=false;
+    }
+
+    function getObjectLocalCenter(root,obj,item,index){
       root.updateMatrixWorld(true);
 
-      const box=new THREE.Box3().setFromObject(obj);
+      let box=new THREE.Box3().setFromObject(obj);
+      if(!isFinite(box.min.x) || box.isEmpty()){
+        const worldPos=new THREE.Vector3();
+        obj.getWorldPosition(worldPos);
+        return root.worldToLocal(worldPos);
+      }
+
       const center=box.getCenter(new THREE.Vector3());
       const size=box.getSize(new THREE.Vector3());
 
-      // Put the editable word at the actual word/object position.
-      // If the object is a text mesh/sign, this replaces it in the same place.
-      // Optional JSON fields can fine-tune placement later:
-      // "offset": [x,y,z], "scale": 0.8
+      // Move label a bit above / in front of the original word/object.
+      // This prevents labels from being hidden by wall/sign surfaces.
+      center.y += Math.max(size.y*0.38,0.10);
+
+      const cameraDir=new THREE.Vector3();
+      camera.getWorldPosition(cameraDir);
+      cameraDir.sub(center).normalize();
+      center.add(cameraDir.multiplyScalar(Math.max(size.length()*0.03,0.06)));
+
       const local=root.worldToLocal(center.clone());
 
       if(Array.isArray(item.offset)){
@@ -202,7 +265,13 @@
         local.z+=Number(item.offset[2]||0);
       }
 
+      return local;
+    }
+
+    function createEditableLabelForObject(root,obj,item,index=0){
+      const local=getObjectLocalCenter(root,obj,item,index);
       const made=makeLabelTexture(item.shownWord,false);
+
       const mat=new THREE.SpriteMaterial({
         map:made.texture,
         transparent:true,
@@ -214,22 +283,19 @@
       const sprite=new THREE.Sprite(mat);
       sprite.position.copy(local);
 
-      const rawBase=Math.max(size.y,size.x*.35,size.z*.35,0.24);
-      const autoBase=Math.min(Math.max(rawBase*1.25,0.38),1.35);
-      const base=Number(item.scale||autoBase);
-
+      // Use a consistent visible size instead of relying on mesh size.
+      // This makes wall labels visible like the Casher label.
+      const base=Number(item.scale||0.78);
       sprite.userData={
         itemId:item.id,
         baseScale:base,
         nodeName:item.nodeName,
         isEditableLabel:true
       };
-
       sprite.scale.set(base*made.aspect,base,1);
-      sprite.renderOrder=999;
+      sprite.renderOrder=9999;
       root.add(sprite);
 
-      // Larger invisible click helper makes mobile tapping easier.
       const hitMat=new THREE.SpriteMaterial({
         color:0xffffff,
         transparent:true,
@@ -238,42 +304,55 @@
         depthWrite:false,
         sizeAttenuation:true
       });
+
       const hitSprite=new THREE.Sprite(hitMat);
       hitSprite.position.copy(local);
-      hitSprite.scale.set(base*made.aspect*1.18,base*1.35,1);
+      hitSprite.scale.set(base*made.aspect*1.35,base*1.65,1);
       hitSprite.userData={
         itemId:item.id,
         isHitArea:true,
-        labelSprite:sprite
+        labelSprite:sprite,
+        nodeName:item.nodeName
       };
-      hitSprite.renderOrder=998;
+      hitSprite.renderOrder=9998;
       root.add(hitSprite);
 
       sprites.push(hitSprite);
       sprites.push(sprite);
       spriteById[item.id]=sprite;
+      hitSpriteById[item.id]=hitSprite;
+      createdLabels.push(item.nodeName);
 
       hideObject(obj);
+    }
+
+    function updateDebugLabels(){
+      const total=data&&data.items?data.items.length:0;
+      const created=createdLabels.length;
+      let text=`Labels: ${created} / ${total}`;
+      if(missingNodes.length){
+        text+=` | Missing: ${missingNodes.join(', ')}`;
+      }
+      debugLabels.textContent=text;
     }
 
     function onPointerDown(event){
       const rect=renderer.domElement.getBoundingClientRect();
       pointer.x=((event.clientX-rect.left)/rect.width)*2-1;
       pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+
       raycaster.setFromCamera(pointer,camera);
+
       const hits=raycaster.intersectObjects(sprites,false);
       if(hits.length){
         const id=hits[0].object.userData.itemId;
         const item=data.items.find(v=>v.id===id);
-        if(item)openEditor(item);
+        if(item){
+          openEditor(item);
+          event.preventDefault();
+          return;
+        }
       }
-    }
-
-    function showLoadError(message){
-      console.error(message);
-      loadText.textContent=message;
-      barFill.style.width='100%';
-      setStatus('Error');
     }
 
     async function init(){
@@ -297,12 +376,17 @@
         const root=gltf.scene;
         scene.add(root);
         root.updateMatrixWorld(true);
-        data.items.forEach(item=>{
+        data.items.forEach((item,index)=>{
           answers[item.id]=item.shownWord;
           const obj=findObjectByName(root,item.nodeName);
-          if(obj)createEditableLabelForObject(root,obj,item);
-          else console.warn('Missing node',item.nodeName);
+          if(obj){
+            createEditableLabelForObject(root,obj,item,index);
+          }else{
+            console.warn('Missing node',item.nodeName);
+            missingNodes.push(item.nodeName);
+          }
         });
+        updateDebugLabels();
         centerModel(root);
         loaderEl.style.display='none';
         setStatus('Ready');
@@ -344,9 +428,7 @@
     function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
 
     window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight)});
-    renderer.domElement.style.cursor='pointer';
     renderer.domElement.addEventListener('pointerdown',onPointerDown);
-    renderer.domElement.addEventListener('click',onPointerDown);
     cancelBtn.addEventListener('click',closeEditor);
     saveBtn.addEventListener('click',saveAnswer);
     editInput.addEventListener('keydown',e=>{if(e.key==='Enter')saveAnswer();if(e.key==='Escape')closeEditor()});
