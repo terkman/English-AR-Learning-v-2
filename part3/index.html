@@ -1,40 +1,346 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>3.1 สแกนคำถามขึ้นวงล้อ</title>
-  <link rel="stylesheet" href="../style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Part 3.1 | Source Wheel</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    :root{
+      --part3:#c084fc;
+      --part3-2:#a855f7;
+      --dark:#2e1065;
+      --line:rgba(255,255,255,.16);
+      --panel:rgba(15,23,42,.86);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation}
+    a-scene,a-scene canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:1!important;background:transparent!important}
+    video{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:0!important;background:#000!important}
+    .a-enter-vr,.a-enter-ar,.mindar-ui-overlay,.mindar-ui-scanning,.mindar-ui-loading,.mindar-ui-error{display:none!important}
+
+    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(180deg,rgba(2,6,23,.60),rgba(2,6,23,0));pointer-events:none}
+    .topbar>*{pointer-events:auto}
+    .back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(15,23,42,.62);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-weight:900;font-size:14px;backdrop-filter:blur(12px)}
+    .status{max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:950;letter-spacing:.04em;color:#230a3b;background:rgba(192,132,252,.95);box-shadow:0 8px 30px rgba(168,85,247,.24)}
+    .status.found{background:rgba(6,214,160,.96);color:#00170f;box-shadow:0 8px 30px rgba(6,214,160,.22)}
+
+    .start{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,rgba(192,132,252,.36) 0%,#2e1065 38%,#020617 74%);text-align:center}
+    .start-card{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:26px;background:rgba(255,255,255,.10);box-shadow:0 24px 90px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+    .start h1{margin:0 0 8px;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:950}
+    .start p{margin:8px auto 16px;max-width:420px;line-height:1.55;color:#f3e8ff;font-size:15px}
+    .start button{border:0;border-radius:18px;background:var(--part3);color:#230a3b;font-size:17px;font-weight:950;padding:14px 22px;box-shadow:0 12px 30px rgba(168,85,247,.32)}
+    .start button:disabled{opacity:.55}
+    .hint{font-size:13px;color:#e9d5ff;margin-top:12px;line-height:1.45}
+    .error{display:none;margin-top:12px;color:#fecaca;background:rgba(127,29,29,.32);border:1px solid rgba(254,202,202,.25);border-radius:14px;padding:10px;line-height:1.45;text-align:left}
+
+    .wheel-panel{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:35;display:none;border:1px solid rgba(192,132,252,.34);border-radius:22px;background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.48);backdrop-filter:blur(16px);padding:12px}
+    .wheel-panel.show{display:block}
+    .question-label{color:var(--part3);font-size:12px;line-height:1;letter-spacing:.08em;font-weight:950;text-transform:uppercase;margin-bottom:7px}
+    .popup-question{color:#f8fafc;font-size:clamp(13px,3.5vw,16px);line-height:1.35;font-weight:750;margin-bottom:10px;max-height:72px;overflow:auto;padding-right:3px}
+    .wheel-row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center}
+    .wheel-wrap{position:relative;width:118px;height:118px;margin:0 auto}
+    .pointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:18px solid #fff;z-index:3;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+    .wheel{position:absolute;inset:0;border-radius:50%;border:4px solid rgba(255,255,255,.85);box-shadow:0 10px 34px rgba(0,0,0,.35);transition:transform 2.8s cubic-bezier(.16,.86,.22,1);background:conic-gradient(#c084fc 0 45deg,#a78bfa 45deg 90deg,#818cf8 90deg 135deg,#60a5fa 135deg 180deg,#34d399 180deg 225deg,#facc15 225deg 270deg,#fb923c 270deg 315deg,#f472b6 315deg 360deg)}
+    .wheel::after{content:"";position:absolute;inset:36px;border-radius:50%;background:rgba(2,6,23,.88);border:2px solid rgba(255,255,255,.55)}
+    .wheel-num{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.8);z-index:2}
+    .wheel-num.n1{transform:translate(-50%,-50%) rotate(22deg) translateY(-48px) rotate(-22deg)}
+    .wheel-num.n2{transform:translate(-50%,-50%) rotate(67deg) translateY(-48px) rotate(-67deg)}
+    .wheel-num.n3{transform:translate(-50%,-50%) rotate(112deg) translateY(-48px) rotate(-112deg)}
+    .wheel-num.n4{transform:translate(-50%,-50%) rotate(157deg) translateY(-48px) rotate(-157deg)}
+    .wheel-num.n5{transform:translate(-50%,-50%) rotate(202deg) translateY(-48px) rotate(-202deg)}
+    .wheel-num.n6{transform:translate(-50%,-50%) rotate(247deg) translateY(-48px) rotate(-247deg)}
+    .wheel-num.n7{transform:translate(-50%,-50%) rotate(292deg) translateY(-48px) rotate(-292deg)}
+    .wheel-num.n8{transform:translate(-50%,-50%) rotate(337deg) translateY(-48px) rotate(-337deg)}
+    .wheel-actions{display:grid;gap:9px;min-width:0}
+    .spin-btn{border:0;border-radius:16px;background:var(--part3);color:#230a3b;font-size:16px;font-weight:950;padding:11px 14px;box-shadow:0 12px 28px rgba(168,85,247,.28)}
+    .spin-btn:disabled{opacity:.62}
+    .result-label{color:#c4b5fd;font-size:12px;font-weight:950;letter-spacing:.07em;text-transform:uppercase}
+    .wheel-result{min-height:43px;border-radius:16px;padding:10px 12px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:14px;line-height:1.35;font-weight:800}
+    @media (min-width:700px){.wheel-panel{left:50%;right:auto;width:min(680px,calc(100vw - 28px));transform:translateX(-50%)}.wheel-row{grid-template-columns:140px 1fr}.wheel-wrap{width:136px;height:136px}.wheel-num.n1,.wheel-num.n2,.wheel-num.n3,.wheel-num.n4,.wheel-num.n5,.wheel-num.n6,.wheel-num.n7,.wheel-num.n8{font-size:13px}}
+  </style>
 </head>
-<body class="ar-page">
-  <div class="ar-topbar">
-    <a class="ar-back-btn" href="../index.html">← Back</a>
-    <span class="ar-status">READY</span>
-    <button class="ar-mini-btn" data-speak="Give a reason">🔊</button>
+<body>
+  <div class="topbar">
+    <a class="back" href="../index.html">← Home</a>
+    <div id="status" class="status">Ready</div>
   </div>
-  <main class="ar-shell">
-    <section class="ar-card">
-      <div class="ar-hero">
-        <h1 class="ar-title">🎡 3.1 สแกนคำถามขึ้นวงล้อ</h1>
-        <p class="ar-desc">สแกนภาพเพื่อรับคำถาม แล้วใช้วงล้อสุ่มวิธีตอบ</p>
+
+  <div id="start" class="start">
+    <div class="start-card">
+      <h1>Part 3.1 Source Wheel</h1>
+      <p>Scan an image to see a full AR question, then spin the wheel to choose a source for finding answers.</p>
+      <button id="startBtn" type="button">Start Camera</button>
+      <div class="hint">Best on mobile Chrome. Please allow camera permission.</div>
+      <div id="error" class="error"></div>
+    </div>
+  </div>
+
+  <div id="wheelPanel" class="wheel-panel">
+    <div class="question-label">Question</div>
+    <div id="popupQuestion" class="popup-question"></div>
+    <div class="wheel-row">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <div id="wheel" class="wheel">
+          <span class="wheel-num n1">1</span><span class="wheel-num n2">2</span><span class="wheel-num n3">3</span><span class="wheel-num n4">4</span>
+          <span class="wheel-num n5">5</span><span class="wheel-num n6">6</span><span class="wheel-num n7">7</span><span class="wheel-num n8">8</span>
+        </div>
       </div>
-      <div class="camera-box">
-        <div class="scan-line"></div>
-        <div class="camera-icon">📷</div>
-        <div class="camera-title">Camera / Image Tracking Area</div>
-        <p class="camera-desc">This page keeps the correct sub-page URL and file paths. Connect your MindAR target file and JSON data here when ready.</p>
+      <div class="wheel-actions">
+        <button id="spinBtn" class="spin-btn" type="button">Spin</button>
+        <div class="result-label">Selected Source</div>
+        <div id="wheelResult" class="wheel-result">กด Spin เพื่อสุ่มแหล่งข้อมูล</div>
       </div>
-      <div class="ar-actions">
-        <button class="btn btn-pink" data-demo-output="#demo-output">Preview AR Output</button>
-        <button class="btn btn-ghost" data-speak="Give a reason">Speak</button>
-      </div>
-      <div id="demo-output" class="demo-output visually-hidden">
-        <div class="demo-label">MISSION WHEEL</div>
-        <div class="demo-text">Give a reason · Compare · Give an example</div>
-      </div>
-    </section>
-  </main>
-  <script src="../script.js"></script>
+    </div>
+  </div>
+
+  <a-scene
+    id="scene"
+    mindar-image="imageTargetSrc: ../assets/targets/part3-1.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.01"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
+  </a-scene>
+
+  <script>
+    const DATA_URL='../assets/data/part3-1.json';
+    const MIND_URL='../assets/targets/part3-1.mind';
+
+    const scene=document.getElementById('scene');
+    const startScreen=document.getElementById('start');
+    const startBtn=document.getElementById('startBtn');
+    const errorEl=document.getElementById('error');
+    const statusEl=document.getElementById('status');
+    const wheelPanel=document.getElementById('wheelPanel');
+    const popupQuestion=document.getElementById('popupQuestion');
+    const wheel=document.getElementById('wheel');
+    const spinBtn=document.getElementById('spinBtn');
+    const wheelResult=document.getElementById('wheelResult');
+
+    let sourceData=null;
+    let items=[];
+    let wheelItems=[];
+    let dataReady=false;
+    let targetsBuilt=false;
+    let activeItem=null;
+    let wheelRotation=0;
+    const foundTargets=new Set();
+
+    function setStatus(text,found=false){statusEl.textContent=text;statusEl.classList.toggle('found',!!found)}
+    function showError(message){errorEl.style.display='block';errorEl.textContent=message}
+    function cleanText(value){return String(value||'').replace(/\s+/g,' ').trim()}
+
+    function wrapCanvasText(ctx,text,maxWidth){
+      const tokens=cleanText(text).split(' ');
+      const lines=[];
+      let line='';
+      tokens.forEach(token=>{
+        const candidate=line?`${line} ${token}`:token;
+        if(ctx.measureText(candidate).width>maxWidth&&line){
+          lines.push(line);
+          line=token;
+        }else{
+          line=candidate;
+        }
+      });
+      if(line)lines.push(line);
+      return lines;
+    }
+
+    function makeQuestionTexture(question){
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      const width=1400;
+      canvas.width=width;
+
+      let fontSize=56;
+      if(question.length>95)fontSize=46;
+      if(question.length>125)fontSize=40;
+      if(question.length>160)fontSize=35;
+
+      ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      const maxTextWidth=width-120;
+      let lines=wrapCanvasText(ctx,question,maxTextWidth);
+
+      while(lines.length>8&&fontSize>28){
+        fontSize-=3;
+        ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        lines=wrapCanvasText(ctx,question,maxTextWidth);
+      }
+
+      const lineHeight=Math.round(fontSize*1.28);
+      const height=Math.max(280,lines.length*lineHeight+90);
+      canvas.height=height;
+
+      ctx.clearRect(0,0,width,height);
+      ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.lineJoin='round';
+
+      const startY=height/2-((lines.length-1)*lineHeight)/2;
+      lines.forEach((line,i)=>{
+        const y=startY+i*lineHeight;
+        ctx.shadowColor='rgba(46,16,101,.85)';
+        ctx.shadowBlur=18;
+        ctx.shadowOffsetX=5;
+        ctx.shadowOffsetY=6;
+        ctx.lineWidth=Math.max(8,Math.round(fontSize*.18));
+        ctx.strokeStyle='rgba(2,6,23,.92)';
+        ctx.strokeText(line,width/2,y);
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.fillStyle='#f8fafc';
+        ctx.fillText(line,width/2,y);
+        ctx.lineWidth=Math.max(2,Math.round(fontSize*.045));
+        ctx.strokeStyle='rgba(216,180,254,.55)';
+        ctx.strokeText(line,width/2,y);
+      });
+
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.needsUpdate=true;
+      texture.minFilter=THREE.LinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      return {texture,aspect:canvas.width/canvas.height};
+    }
+
+    function buildQuestionGroup(item){
+      const group=document.createElement('a-entity');
+      group.setAttribute('position','0 0.02 0.08');
+      group.setAttribute('rotation','0 0 0');
+
+      const plane=document.createElement('a-plane');
+      const made=makeQuestionTexture(item.question);
+      const width=1.25;
+      const height=width/made.aspect;
+      plane.setAttribute('geometry',`primitive: plane; width: ${width}; height: ${height}`);
+      plane.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: true; depthWrite: false');
+      plane.addEventListener('loaded',()=>{
+        const mesh=plane.getObject3D('mesh');
+        if(!mesh)return;
+        mesh.material.map=made.texture;
+        mesh.material.transparent=true;
+        mesh.material.needsUpdate=true;
+      });
+      group.appendChild(plane);
+      return group;
+    }
+
+    function showPanel(item){
+      activeItem=item;
+      popupQuestion.textContent=item.question;
+      wheelResult.textContent='กด Spin เพื่อสุ่มแหล่งข้อมูล';
+      wheelPanel.classList.add('show');
+    }
+
+    function hidePanel(){
+      activeItem=null;
+      wheelPanel.classList.remove('show');
+      popupQuestion.textContent='';
+      wheelResult.textContent='กด Spin เพื่อสุ่มแหล่งข้อมูล';
+    }
+
+    function buildTargets(){
+      if(targetsBuilt)return;
+      items.forEach(item=>{
+        const target=document.createElement('a-entity');
+        target.setAttribute('mindar-image-target',`targetIndex: ${item.index}`);
+
+        target.addEventListener('targetFound',()=>{
+          foundTargets.add(item.index);
+          setStatus('Found',true);
+          if(!target.__questionGroup){
+            target.__questionGroup=buildQuestionGroup(item);
+            target.appendChild(target.__questionGroup);
+          }
+          showPanel(item);
+          if(navigator.vibrate)navigator.vibrate(35);
+        });
+
+        target.addEventListener('targetLost',()=>{
+          foundTargets.delete(item.index);
+          if(target.__questionGroup){
+            target.removeChild(target.__questionGroup);
+            target.__questionGroup=null;
+          }
+          if(foundTargets.size===0){
+            setStatus('Scanning',false);
+            hidePanel();
+          }
+        });
+
+        scene.appendChild(target);
+      });
+      targetsBuilt=true;
+    }
+
+    async function loadData(){
+      const response=await fetch(DATA_URL,{cache:'no-store'});
+      if(!response.ok)throw new Error('Cannot load part3-1.json');
+      sourceData=await response.json();
+      items=Array.isArray(sourceData.items)?sourceData.items:[];
+      wheelItems=Array.isArray(sourceData.wheelItems)?sourceData.wheelItems:[];
+      if(!items.length)throw new Error('part3-1.json has no items');
+      if(wheelItems.length!==8)throw new Error('Wheel items must have 8 items');
+      buildTargets();
+      dataReady=true;
+    }
+
+    function waitForSceneLoaded(){return new Promise(resolve=>{if(scene.hasLoaded)resolve();else scene.addEventListener('loaded',resolve,{once:true})})}
+    async function checkMindFile(){const response=await fetch(MIND_URL,{cache:'no-store'});if(!response.ok)throw new Error('Cannot find assets/targets/part3-1.mind')}
+
+    async function startAR(){
+      try{
+        startBtn.disabled=true;
+        errorEl.style.display='none';
+        setStatus('Starting');
+        await checkMindFile();
+        await waitForSceneLoaded();
+        if(!dataReady)await loadData();
+        const mindarSystem=scene.systems['mindar-image-system'];
+        if(!mindarSystem)throw new Error('MindAR system is not ready');
+        await mindarSystem.start();
+        startScreen.style.display='none';
+        setStatus('Scanning');
+      }catch(error){
+        console.error(error);
+        setStatus('Error');
+        showError(error.message||'Cannot start AR. Please check camera permission and .mind file.');
+        startBtn.disabled=false;
+      }
+    }
+
+    function spinWheel(){
+      if(!wheelItems.length||spinBtn.disabled)return;
+      spinBtn.disabled=true;
+      wheelResult.textContent='Spinning...';
+      const selectedIndex=Math.floor(Math.random()*wheelItems.length);
+      const segment=360/wheelItems.length;
+      const targetAngle=360-(selectedIndex*segment+segment/2);
+      const extraTurns=360*(4+Math.floor(Math.random()*3));
+      wheelRotation+=extraTurns+targetAngle-(wheelRotation%360);
+      wheel.style.transform=`rotate(${wheelRotation}deg)`;
+      setTimeout(()=>{
+        wheelResult.textContent=wheelItems[selectedIndex];
+        spinBtn.disabled=false;
+      },2850);
+    }
+
+    scene.addEventListener('arReady',()=>console.log('[3.1] AR ready'));
+    scene.addEventListener('arError',()=>{setStatus('Camera Error');showError('Camera access failed. Please allow camera permission and reload this page.')});
+    startBtn.addEventListener('click',startAR);
+    spinBtn.addEventListener('click',spinWheel);
+    loadData().catch(error=>{console.error(error);setStatus('Data Error');showError(error.message||'Cannot load AR data.')});
+  </script>
 </body>
 </html>
