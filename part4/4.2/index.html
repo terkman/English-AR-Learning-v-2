@@ -77,23 +77,50 @@
     function makeLabelTexture(text,done=false){
       const canvas=document.createElement('canvas');
       const ctx=canvas.getContext('2d');
-      const fontSize=52;
-      ctx.font=`900 ${fontSize}px system-ui, -apple-system, Segoe UI, sans-serif`;
-      const paddingX=36,paddingY=22;
-      const metrics=ctx.measureText(text);
-      canvas.width=Math.max(360,Math.ceil(metrics.width+paddingX*2));
+      const label=String(text||'').trim();
+
+      let fontSize=50;
+      if(label.length>18)fontSize=42;
+      if(label.length>26)fontSize=36;
+
+      ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      const paddingX=34,paddingY=22;
+      const metrics=ctx.measureText(label);
+      canvas.width=Math.max(330,Math.ceil(metrics.width+paddingX*2));
       canvas.height=fontSize+paddingY*2;
-      ctx.font=`900 ${fontSize}px system-ui, -apple-system, Segoe UI, sans-serif`;
-      ctx.fillStyle=done?'rgba(22,101,52,.88)':'rgba(15,23,42,.90)';
-      ctx.strokeStyle=done?'rgba(134,239,172,.95)':'rgba(216,180,254,.95)';
-      ctx.lineWidth=6;
-      roundRect(ctx,3,3,canvas.width-6,canvas.height-6,24);
-      ctx.fill();ctx.stroke();
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.lineWidth=7;ctx.strokeStyle='rgba(2,6,23,.90)';ctx.strokeText(text,canvas.width/2,canvas.height/2+2);
-      ctx.fillStyle='#ffffff';ctx.fillText(text,canvas.width/2,canvas.height/2+2);
+
+      ctx.font=`900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle=done?'rgba(22,101,52,.92)':'rgba(15,23,42,.92)';
+      ctx.strokeStyle=done?'rgba(134,239,172,.98)':'rgba(251,191,36,.98)';
+      ctx.lineWidth=7;
+      roundRect(ctx,4,4,canvas.width-8,canvas.height-8,24);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.lineJoin='round';
+
+      ctx.shadowColor='rgba(0,0,0,.55)';
+      ctx.shadowBlur=8;
+      ctx.shadowOffsetX=3;
+      ctx.shadowOffsetY=4;
+
+      ctx.lineWidth=Math.max(6,Math.round(fontSize*.13));
+      ctx.strokeStyle='rgba(2,6,23,.95)';
+      ctx.strokeText(label,canvas.width/2,canvas.height/2+2);
+
+      ctx.shadowBlur=0;
+      ctx.shadowOffsetX=0;
+      ctx.shadowOffsetY=0;
+
+      ctx.fillStyle='#ffffff';
+      ctx.fillText(label,canvas.width/2,canvas.height/2+2);
+
       const texture=new THREE.CanvasTexture(canvas);
-      texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;
+      texture.minFilter=THREE.LinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      texture.needsUpdate=true;
       return {texture,aspect:canvas.width/canvas.height};
     }
 
@@ -158,21 +185,74 @@
 
     function createEditableLabelForObject(root,obj,item){
       root.updateMatrixWorld(true);
+
       const box=new THREE.Box3().setFromObject(obj);
       const center=box.getCenter(new THREE.Vector3());
-      const local=root.worldToLocal(center.clone());
       const size=box.getSize(new THREE.Vector3());
+
+      // Put the editable word at the actual word/object position.
+      // If the object is a text mesh/sign, this replaces it in the same place.
+      // Optional JSON fields can fine-tune placement later:
+      // "offset": [x,y,z], "scale": 0.8
+      const local=root.worldToLocal(center.clone());
+
+      if(Array.isArray(item.offset)){
+        local.x+=Number(item.offset[0]||0);
+        local.y+=Number(item.offset[1]||0);
+        local.z+=Number(item.offset[2]||0);
+      }
+
       const made=makeLabelTexture(item.shownWord,false);
-      const mat=new THREE.SpriteMaterial({map:made.texture,transparent:true,depthTest:false,depthWrite:false});
+      const mat=new THREE.SpriteMaterial({
+        map:made.texture,
+        transparent:true,
+        depthTest:false,
+        depthWrite:false,
+        sizeAttenuation:true
+      });
+
       const sprite=new THREE.Sprite(mat);
       sprite.position.copy(local);
-      const rawBase=Math.max(size.y,size.x*.35,size.z*.35,0.28);
-      const base=Math.min(Math.max(rawBase*1.15,0.35),1.25);
-      sprite.userData={itemId:item.id,baseScale:base};
+
+      const rawBase=Math.max(size.y,size.x*.35,size.z*.35,0.24);
+      const autoBase=Math.min(Math.max(rawBase*1.25,0.38),1.35);
+      const base=Number(item.scale||autoBase);
+
+      sprite.userData={
+        itemId:item.id,
+        baseScale:base,
+        nodeName:item.nodeName,
+        isEditableLabel:true
+      };
+
       sprite.scale.set(base*made.aspect,base,1);
+      sprite.renderOrder=999;
       root.add(sprite);
+
+      // Larger invisible click helper makes mobile tapping easier.
+      const hitMat=new THREE.SpriteMaterial({
+        color:0xffffff,
+        transparent:true,
+        opacity:0.001,
+        depthTest:false,
+        depthWrite:false,
+        sizeAttenuation:true
+      });
+      const hitSprite=new THREE.Sprite(hitMat);
+      hitSprite.position.copy(local);
+      hitSprite.scale.set(base*made.aspect*1.18,base*1.35,1);
+      hitSprite.userData={
+        itemId:item.id,
+        isHitArea:true,
+        labelSprite:sprite
+      };
+      hitSprite.renderOrder=998;
+      root.add(hitSprite);
+
+      sprites.push(hitSprite);
       sprites.push(sprite);
       spriteById[item.id]=sprite;
+
       hideObject(obj);
     }
 
@@ -264,7 +344,9 @@
     function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
 
     window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight)});
+    renderer.domElement.style.cursor='pointer';
     renderer.domElement.addEventListener('pointerdown',onPointerDown);
+    renderer.domElement.addEventListener('click',onPointerDown);
     cancelBtn.addEventListener('click',closeEditor);
     saveBtn.addEventListener('click',saveAnswer);
     editInput.addEventListener('keydown',e=>{if(e.key==='Enter')saveAnswer();if(e.key==='Escape')closeEditor()});
