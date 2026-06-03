@@ -39,29 +39,10 @@
 
     .wheel-panel{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:35;display:none;border:1px solid rgba(192,132,252,.34);border-radius:22px;background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.48);backdrop-filter:blur(16px);padding:12px}
     .wheel-panel.show{display:block}
-    .question-label{color:var(--part3);font-size:12px;line-height:1;letter-spacing:.08em;font-weight:950;text-transform:uppercase;margin-bottom:7px}
-    .popup-question{color:#f8fafc;font-size:clamp(13px,3.5vw,16px);line-height:1.35;font-weight:750;margin-bottom:10px;max-height:70px;overflow:auto;padding-right:3px}
-    .result-label{color:#c4b5fd;font-size:12px;font-weight:950;letter-spacing:.07em;text-transform:uppercase;margin:6px 0 6px}
-    .wheel-result{min-height:43px;border-radius:16px;padding:10px 12px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:14px;line-height:1.35;font-weight:800}
-
-    .wheel-overlay{position:fixed;left:50%;top:50%;z-index:40;display:none;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
-    .wheel-overlay.show{display:block}
-    .wheel-tip{display:inline-block;margin-bottom:10px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.20);padding:7px 12px;color:#fff;font-size:12px;font-weight:950;letter-spacing:.04em;backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(0,0,0,.35)}
-    .wheel-wrap{position:relative;width:184px;height:184px;margin:0 auto;pointer-events:auto}
-    .pointer{position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:27px solid #fff;z-index:3;filter:drop-shadow(0 4px 5px rgba(0,0,0,.50))}
-    .wheel{position:absolute;inset:0;border-radius:50%;border:5px solid rgba(255,255,255,.88);box-shadow:0 16px 44px rgba(0,0,0,.48);transition:transform 2.8s cubic-bezier(.16,.86,.22,1);background:conic-gradient(#c084fc 0 45deg,#a78bfa 45deg 90deg,#818cf8 90deg 135deg,#60a5fa 135deg 180deg,#34d399 180deg 225deg,#facc15 225deg 270deg,#fb923c 270deg 315deg,#f472b6 315deg 360deg);cursor:pointer;touch-action:manipulation}
-    .wheel:active{transform:scale(.97)}
-    .wheel::after{content:"";position:absolute;inset:56px;border-radius:50%;background:rgba(2,6,23,.88);border:2px solid rgba(255,255,255,.55)}
-    .wheel-num{position:absolute;left:50%;top:50%;font-size:16px;font-weight:950;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.8);z-index:2}
-    .wheel-num.n1{transform:translate(-50%,-50%) rotate(22deg) translateY(-74px) rotate(-22deg)}
-    .wheel-num.n2{transform:translate(-50%,-50%) rotate(67deg) translateY(-74px) rotate(-67deg)}
-    .wheel-num.n3{transform:translate(-50%,-50%) rotate(112deg) translateY(-74px) rotate(-112deg)}
-    .wheel-num.n4{transform:translate(-50%,-50%) rotate(157deg) translateY(-74px) rotate(-157deg)}
-    .wheel-num.n5{transform:translate(-50%,-50%) rotate(202deg) translateY(-74px) rotate(-202deg)}
-    .wheel-num.n6{transform:translate(-50%,-50%) rotate(247deg) translateY(-74px) rotate(-247deg)}
-    .wheel-num.n7{transform:translate(-50%,-50%) rotate(292deg) translateY(-74px) rotate(-292deg)}
-    .wheel-num.n8{transform:translate(-50%,-50%) rotate(337deg) translateY(-74px) rotate(-337deg)}
-    @media (min-width:700px){.wheel-panel{left:50%;right:auto;width:min(680px,calc(100vw - 28px));transform:translateX(-50%)}.wheel-wrap{width:220px;height:220px}.wheel::after{inset:68px}.wheel-num{font-size:18px}.wheel-num.n1{transform:translate(-50%,-50%) rotate(22deg) translateY(-90px) rotate(-22deg)}.wheel-num.n2{transform:translate(-50%,-50%) rotate(67deg) translateY(-90px) rotate(-67deg)}.wheel-num.n3{transform:translate(-50%,-50%) rotate(112deg) translateY(-90px) rotate(-112deg)}.wheel-num.n4{transform:translate(-50%,-50%) rotate(157deg) translateY(-90px) rotate(-157deg)}.wheel-num.n5{transform:translate(-50%,-50%) rotate(202deg) translateY(-90px) rotate(-202deg)}.wheel-num.n6{transform:translate(-50%,-50%) rotate(247deg) translateY(-90px) rotate(-247deg)}.wheel-num.n7{transform:translate(-50%,-50%) rotate(292deg) translateY(-90px) rotate(-292deg)}.wheel-num.n8{transform:translate(-50%,-50%) rotate(337deg) translateY(-90px) rotate(-337deg)}} 
+    .result-label{color:#c4b5fd;font-size:12px;font-weight:950;letter-spacing:.07em;text-transform:uppercase;margin:0 0 7px}
+    .wheel-result{min-height:46px;border-radius:16px;padding:10px 12px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:14px;line-height:1.35;font-weight:800}
+    .small-hint{margin-top:7px;color:#cbd5e1;font-size:12px;font-weight:700;line-height:1.35}
+    @media (min-width:700px){.wheel-panel{left:50%;right:auto;width:min(680px,calc(100vw - 28px));transform:translateX(-50%)}}
 
   </style>
 </head>
@@ -81,22 +62,10 @@
     </div>
   </div>
 
-  <div id="wheelOverlay" class="wheel-overlay">
-    <div class="wheel-tip">Tap the wheel to spin</div>
-    <div class="wheel-wrap">
-      <div class="pointer"></div>
-      <div id="wheel" class="wheel" role="button" aria-label="Spin source wheel">
-        <span class="wheel-num n1">1</span><span class="wheel-num n2">2</span><span class="wheel-num n3">3</span><span class="wheel-num n4">4</span>
-        <span class="wheel-num n5">5</span><span class="wheel-num n6">6</span><span class="wheel-num n7">7</span><span class="wheel-num n8">8</span>
-      </div>
-    </div>
-  </div>
-
   <div id="wheelPanel" class="wheel-panel">
-    <div class="question-label">Question</div>
-    <div id="popupQuestion" class="popup-question"></div>
     <div class="result-label">Selected Source</div>
     <div id="wheelResult" class="wheel-result">แตะวงล้อเพื่อสุ่มแหล่งข้อมูล</div>
+    <div class="small-hint">วงล้ออยู่บนภาพที่สแกน แตะวงล้อเพื่อ Spin</div>
   </div>
 
   <a-scene
@@ -107,7 +76,7 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded>
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .clickable"></a-camera>
     <a-entity light="type: ambient; intensity: 1.35"></a-entity>
     <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
   </a-scene>
@@ -122,9 +91,6 @@
     const errorEl=document.getElementById('error');
     const statusEl=document.getElementById('status');
     const wheelPanel=document.getElementById('wheelPanel');
-    const wheelOverlay=document.getElementById('wheelOverlay');
-    const popupQuestion=document.getElementById('popupQuestion');
-    const wheel=document.getElementById('wheel');
     const wheelResult=document.getElementById('wheelResult');
 
     let sourceData=null;
@@ -135,34 +101,78 @@
     let activeItem=null;
     let wheelRotation=0;
     let isSpinning=false;
+    let activeWheelPlane=null;
     const foundTargets=new Set();
 
     function setStatus(text,found=false){statusEl.textContent=text;statusEl.classList.toggle('found',!!found)}
     function showError(message){errorEl.style.display='block';errorEl.textContent=message}
     function cleanText(value){return String(value||'').replace(/\s+/g,' ').trim()}
 
-    function splitLongToken(ctx,token,maxWidth){
+    function isLatinToken(token){
+      return /^[A-Za-z0-9][A-Za-z0-9’'?.!,;:()/-]*$/.test(token);
+    }
+
+    function measureText(ctx,text){
+      return ctx.measureText(text).width;
+    }
+
+    function splitThaiChunk(ctx,chunk,maxWidth){
       const pieces=[];
-      let chunk='';
-      Array.from(token).forEach(ch=>{
-        const candidate=chunk+ch;
-        if(ctx.measureText(candidate).width>maxWidth&&chunk){
-          pieces.push(chunk);
-          chunk=ch;
+      let line='';
+      Array.from(chunk).forEach(ch=>{
+        const candidate=line+ch;
+        if(measureText(ctx,candidate)>maxWidth&&line){
+          pieces.push(line);
+          line=ch;
         }else{
-          chunk=candidate;
+          line=candidate;
         }
       });
-      if(chunk)pieces.push(chunk);
+      if(line)pieces.push(line);
       return pieces;
     }
 
-    function wrapCanvasText(ctx,text,maxWidth){
-      const rawTokens=cleanText(text).split(' ');
+    function tokenizeMixedText(text){
+      const parts=cleanText(text).split(/(\s+)/).filter(Boolean);
       const tokens=[];
+      let latinBuffer='';
+
+      function flushLatin(){
+        if(latinBuffer.trim()){
+          tokens.push(latinBuffer.trim());
+          latinBuffer='';
+        }
+      }
+
+      parts.forEach(part=>{
+        if(/^\s+$/.test(part)){
+          if(latinBuffer)latinBuffer+=' ';
+          return;
+        }
+
+        if(isLatinToken(part)){
+          latinBuffer+=latinBuffer?` ${part}`:part;
+        }else{
+          flushLatin();
+          tokens.push(part);
+        }
+      });
+
+      flushLatin();
+      return tokens;
+    }
+
+    function wrapCanvasText(ctx,text,maxWidth){
+      const rawTokens=tokenizeMixedText(text);
+      const tokens=[];
+
       rawTokens.forEach(token=>{
-        if(ctx.measureText(token).width>maxWidth){
-          splitLongToken(ctx,token,maxWidth).forEach(piece=>tokens.push(piece));
+        if(measureText(ctx,token)>maxWidth){
+          if(/[ก-๙]/.test(token)){
+            splitThaiChunk(ctx,token,maxWidth).forEach(piece=>tokens.push(piece));
+          }else{
+            token.split(' ').forEach(piece=>tokens.push(piece));
+          }
         }else{
           tokens.push(token);
         }
@@ -170,15 +180,19 @@
 
       const lines=[];
       let line='';
+
       tokens.forEach(token=>{
-        const candidate=line?`${line} ${token}`:token;
-        if(ctx.measureText(candidate).width>maxWidth&&line){
+        const needSpace=line && isLatinToken(token) && isLatinToken(line.split(' ').slice(-1)[0]);
+        const candidate=line ? (needSpace ? `${line} ${token}` : `${line}${token}`) : token;
+
+        if(measureText(ctx,candidate)>maxWidth&&line){
           lines.push(line);
           line=token;
         }else{
           line=candidate;
         }
       });
+
       if(line)lines.push(line);
       return lines;
     }
@@ -186,26 +200,26 @@
     function makeQuestionTexture(question){
       const canvas=document.createElement('canvas');
       const ctx=canvas.getContext('2d');
-      const width=1600;
+      const width=1800;
       canvas.width=width;
 
-      let fontSize=54;
-      if(question.length>85)fontSize=44;
-      if(question.length>115)fontSize=38;
-      if(question.length>150)fontSize=32;
+      let fontSize=50;
+      if(question.length>85)fontSize=42;
+      if(question.length>115)fontSize=36;
+      if(question.length>150)fontSize=30;
 
+      const maxTextWidth=Math.round(width*0.72);
       ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-      const maxTextWidth=Math.round(width*0.58);
       let lines=wrapCanvasText(ctx,question,maxTextWidth);
 
-      while(lines.length>9&&fontSize>26){
+      while(lines.length>9&&fontSize>25){
         fontSize-=3;
         ctx.font=`800 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
         lines=wrapCanvasText(ctx,question,maxTextWidth);
       }
 
       const lineHeight=Math.round(fontSize*1.22);
-      const height=Math.max(280,lines.length*lineHeight+90);
+      const height=Math.max(250,lines.length*lineHeight+86);
       canvas.height=height;
 
       ctx.clearRect(0,0,width,height);
@@ -217,19 +231,23 @@
       const startY=height/2-((lines.length-1)*lineHeight)/2;
       lines.forEach((line,i)=>{
         const y=startY+i*lineHeight;
-        ctx.shadowColor='rgba(46,16,101,.85)';
-        ctx.shadowBlur=18;
-        ctx.shadowOffsetX=5;
-        ctx.shadowOffsetY=6;
-        ctx.lineWidth=Math.max(8,Math.round(fontSize*.18));
-        ctx.strokeStyle='rgba(2,6,23,.92)';
+        ctx.shadowColor='rgba(46,16,101,.72)';
+        ctx.shadowBlur=14;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=5;
+
+        ctx.lineWidth=Math.max(7,Math.round(fontSize*.16));
+        ctx.strokeStyle='rgba(2,6,23,.90)';
         ctx.strokeText(line,width/2,y);
+
         ctx.shadowBlur=0;
         ctx.shadowOffsetX=0;
         ctx.shadowOffsetY=0;
+
         ctx.fillStyle='#f8fafc';
         ctx.fillText(line,width/2,y);
-        ctx.lineWidth=Math.max(2,Math.round(fontSize*.045));
+
+        ctx.lineWidth=Math.max(2,Math.round(fontSize*.04));
         ctx.strokeStyle='rgba(216,180,254,.55)';
         ctx.strokeText(line,width/2,y);
       });
@@ -241,17 +259,92 @@
       return {texture,aspect:canvas.width/canvas.height};
     }
 
-    function buildQuestionGroup(item){
-      const group=document.createElement('a-entity');
-      group.setAttribute('position','0 0.02 0.08');
-      group.setAttribute('rotation','0 0 0');
+    function makeWheelTexture(){
+      const canvas=document.createElement('canvas');
+      const size=1024;
+      const ctx=canvas.getContext('2d');
+      canvas.width=size;
+      canvas.height=size;
 
+      const colors=['#c084fc','#a78bfa','#818cf8','#60a5fa','#34d399','#facc15','#fb923c','#f472b6'];
+      const cx=size/2;
+      const cy=size/2;
+      const r=size*0.46;
+      const hole=size*0.16;
+      const segment=(Math.PI*2)/colors.length;
+
+      ctx.clearRect(0,0,size,size);
+
+      colors.forEach((color,index)=>{
+        const start=-Math.PI/2+index*segment;
+        const end=start+segment;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.arc(cx,cy,r,start,end);
+        ctx.closePath();
+        ctx.fillStyle=color;
+        ctx.fill();
+        ctx.lineWidth=8;
+        ctx.strokeStyle='rgba(255,255,255,.72)';
+        ctx.stroke();
+      });
+
+      ctx.beginPath();
+      ctx.arc(cx,cy,r+8,0,Math.PI*2);
+      ctx.lineWidth=18;
+      ctx.strokeStyle='rgba(255,255,255,.92)';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx,cy,hole,0,Math.PI*2);
+      ctx.fillStyle='rgba(2,6,23,.92)';
+      ctx.fill();
+      ctx.lineWidth=8;
+      ctx.strokeStyle='rgba(255,255,255,.55)';
+      ctx.stroke();
+
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.needsUpdate=true;
+      texture.minFilter=THREE.LinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      return texture;
+    }
+
+    function makePointerTexture(){
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      canvas.width=220;
+      canvas.height=180;
+      ctx.clearRect(0,0,220,180);
+
+      ctx.beginPath();
+      ctx.moveTo(110,165);
+      ctx.lineTo(35,25);
+      ctx.lineTo(185,25);
+      ctx.closePath();
+      ctx.fillStyle='#ffffff';
+      ctx.shadowColor='rgba(0,0,0,.55)';
+      ctx.shadowBlur=16;
+      ctx.shadowOffsetY=8;
+      ctx.fill();
+
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.needsUpdate=true;
+      texture.minFilter=THREE.LinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      return texture;
+    }
+
+    const WHEEL_TEXTURE=makeWheelTexture();
+    const POINTER_TEXTURE=makePointerTexture();
+
+    function makeQuestionPlane(item,width){
       const plane=document.createElement('a-plane');
       const made=makeQuestionTexture(item.question);
-      const width=0.92;
       const height=width/made.aspect;
       plane.setAttribute('geometry',`primitive: plane; width: ${width}; height: ${height}`);
       plane.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: true; depthWrite: false');
+      plane.__questionHeight=height;
       plane.addEventListener('loaded',()=>{
         const mesh=plane.getObject3D('mesh');
         if(!mesh)return;
@@ -259,23 +352,84 @@
         mesh.material.transparent=true;
         mesh.material.needsUpdate=true;
       });
-      group.appendChild(plane);
+      return plane;
+    }
+
+    function makeWheelPlane(target,item,size){
+      const wheelPlane=document.createElement('a-plane');
+      wheelPlane.classList.add('clickable');
+      wheelPlane.setAttribute('geometry',`primitive: plane; width: ${size}; height: ${size}`);
+      wheelPlane.setAttribute('position','0 0 0.015');
+      wheelPlane.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: false; depthWrite: false');
+      wheelPlane.addEventListener('loaded',()=>{
+        const mesh=wheelPlane.getObject3D('mesh');
+        if(!mesh)return;
+        mesh.material.map=WHEEL_TEXTURE;
+        mesh.material.transparent=true;
+        mesh.material.needsUpdate=true;
+      });
+      wheelPlane.addEventListener('click',(event)=>{
+        event.stopPropagation();
+        activeItem=item;
+        activeWheelPlane=wheelPlane;
+        spinWheel();
+      });
+      wheelPlane.addEventListener('touchend',(event)=>{
+        event.preventDefault();
+        event.stopPropagation();
+        activeItem=item;
+        activeWheelPlane=wheelPlane;
+        spinWheel();
+      },{passive:false});
+      return wheelPlane;
+    }
+
+    function makePointerPlane(size){
+      const pointer=document.createElement('a-plane');
+      pointer.setAttribute('geometry',`primitive: plane; width: ${size*0.26}; height: ${size*0.22}`);
+      pointer.setAttribute('position',`0 ${size*0.56} 0.035`);
+      pointer.setAttribute('material','shader: flat; transparent: true; alphaTest: 0.02; side: double; depthTest: false; depthWrite: false');
+      pointer.addEventListener('loaded',()=>{
+        const mesh=pointer.getObject3D('mesh');
+        if(!mesh)return;
+        mesh.material.map=POINTER_TEXTURE;
+        mesh.material.transparent=true;
+        mesh.material.needsUpdate=true;
+      });
+      return pointer;
+    }
+
+    function buildARContentGroup(item){
+      const group=document.createElement('a-entity');
+      group.setAttribute('position','0 -0.04 0.08');
+      group.setAttribute('rotation','0 0 0');
+
+      const wheelSize=0.48;
+      const questionWidth=0.92;
+      const questionPlane=makeQuestionPlane(item,questionWidth);
+      const questionY=(wheelSize/2)+0.10+(questionPlane.__questionHeight/2);
+      questionPlane.setAttribute('position',`0 ${questionY} 0.035`);
+
+      const wheelGroup=document.createElement('a-entity');
+      wheelGroup.setAttribute('position','0 0 0.04');
+      wheelGroup.appendChild(makeWheelPlane(group,item,wheelSize));
+      wheelGroup.appendChild(makePointerPlane(wheelSize));
+
+      group.appendChild(questionPlane);
+      group.appendChild(wheelGroup);
       return group;
     }
 
     function showPanel(item){
       activeItem=item;
-      popupQuestion.textContent=item.question;
       wheelResult.textContent='แตะวงล้อเพื่อสุ่มแหล่งข้อมูล';
       wheelPanel.classList.add('show');
-      wheelOverlay.classList.add('show');
     }
 
     function hidePanel(){
       activeItem=null;
+      activeWheelPlane=null;
       wheelPanel.classList.remove('show');
-      wheelOverlay.classList.remove('show');
-      popupQuestion.textContent='';
       wheelResult.textContent='แตะวงล้อเพื่อสุ่มแหล่งข้อมูล';
     }
 
@@ -289,7 +443,7 @@
           foundTargets.add(item.index);
           setStatus('Found',true);
           if(!target.__questionGroup){
-            target.__questionGroup=buildQuestionGroup(item);
+            target.__questionGroup=buildARContentGroup(item);
             target.appendChild(target.__questionGroup);
           }
           showPanel(item);
@@ -350,26 +504,46 @@
     }
 
     function spinWheel(){
-      if(!wheelItems.length||isSpinning)return;
+      if(!wheelItems.length||isSpinning||!activeWheelPlane)return;
       isSpinning=true;
       wheelResult.textContent='Spinning...';
+
       const selectedIndex=Math.floor(Math.random()*wheelItems.length);
       const segment=360/wheelItems.length;
       const targetAngle=360-(selectedIndex*segment+segment/2);
       const extraTurns=360*(4+Math.floor(Math.random()*3));
       wheelRotation+=extraTurns+targetAngle-(wheelRotation%360);
-      wheel.style.transform=`rotate(${wheelRotation}deg)`;
-      setTimeout(()=>{
+
+      const mesh=activeWheelPlane.getObject3D('mesh');
+      if(mesh){
+        const startRotation=mesh.rotation.z;
+        const endRotation=THREE.MathUtils.degToRad(wheelRotation);
+        const startTime=performance.now();
+        const duration=2800;
+
+        const easeOut=(t)=>1-Math.pow(1-t,3);
+
+        const animate=(now)=>{
+          const t=Math.min(1,(now-startTime)/duration);
+          mesh.rotation.z=startRotation+(endRotation-startRotation)*easeOut(t);
+          if(t<1){
+            requestAnimationFrame(animate);
+          }else{
+            wheelResult.textContent=wheelItems[selectedIndex];
+            isSpinning=false;
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }else{
         wheelResult.textContent=wheelItems[selectedIndex];
         isSpinning=false;
-      },2850);
+      }
     }
 
     scene.addEventListener('arReady',()=>console.log('[3.1] AR ready'));
     scene.addEventListener('arError',()=>{setStatus('Camera Error');showError('Camera access failed. Please allow camera permission and reload this page.')});
     startBtn.addEventListener('click',startAR);
-    wheel.addEventListener('click',spinWheel);
-    wheel.addEventListener('touchend',(event)=>{event.preventDefault();spinWheel();},{passive:false});
     loadData().catch(error=>{console.error(error);setStatus('Data Error');showError(error.message||'Cannot load AR data.')});
   </script>
 </body>
